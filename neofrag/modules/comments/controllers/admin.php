@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,65 +22,81 @@ class m_comments_c_admin extends Controller_Module
 {
 	public function index($comments, $modules, $tab)
 	{
-		$this	->load->library('tab')
-				->add_tab('default', 'Tous les commentaires', '_tab_index', $comments);
+		$this->tab->add_tab('', $this('all_comments'), function() use ($comments){
+			return $this->_tab_index($comments);
+		});
 
 		foreach ($modules as $module_name => $module)
 		{
 			list($title, $icon) = $module;
-			$this->tab->add_tab($module_name, $this->assets->icon($icon).' '.$title, '_tab_index', $comments, $title);
+			$this->tab->add_tab($module_name, icon($icon).' '.$title, function() use ($comments, $title){
+				return $this->_tab_index($comments, $title);
+			});
 		}
 								
-		return new Panel(array(
+		return new Panel([
 			'content' => $this->tab->display($tab)
-		));
+		]);
 	}
 	
-	public function _tab_index($comments, $title = NULL)
+	private function _tab_index($comments, $title = NULL)
 	{
-		$this	->subtitle(is_null($title) ? 'Tous les commentaires' : $title)
-					->load->library('table');
+		$this->subtitle($title === NULL ? $this('all_comments') : $title);
 		
-		if (is_null($title))
+		if ($title === NULL)
 		{
-			$this->table->add_columns(array(
-				array(
-					'title'   => 'Module',
-					'content' => '<a href="{base_url}admin/comments/{module}.html">{icon {icon}} {module_title}</a>',
+			$this->table->add_columns([
+				[
+					'title'   => $this('module'),
+					'content' => function($data){
+						return '<a href="'.url('admin/comments/'.$data['module'].'.html').'">'.icon($data['icon']).' '.$data['module_title'].'</a>';
+					},
 					'size'    => '25%',
-					'sort'    => '{module_title}',
-					'search'  => '{module_title}'
-				)
-			));
+					'sort'    => function($data){
+						return $data['module_title'];
+					},
+					'search'  => function($data){
+						return $data['module_title'];
+					}
+				]
+			]);
 		}
 	
-		echo $this->table->add_columns(array(
-			array(
-				'title'   => 'Nom',
-				'content' => '{title}',
-				'sort'    => '{title}',
-				'search'  => '{title}'
-			),
-			array(
-				'title'   => '<i class="fa fa-comments-o" data-toggle="tooltip" title="Nombre de commentaires"></i>',
+		return $this->table->add_columns([
+			[
+				'title'   => $this('name'),
 				'content' => function($data){
-					return NeoFrag::loader()->library('comments')->admin_comments($data['module'], $data['module_id'], FALSE);
+					return $data['title'];
+				},
+				'sort'    => function($data){
+					return $data['title'];
+				},
+				'search'  => function($data){
+					return $data['title'];
+				}
+			],
+			[
+				'title'   => '<i class="fa fa-comments-o" data-toggle="tooltip" title="'.$this('number_comments').'"></i>',
+				'content' => function($data){
+					return NeoFrag::loader()->comments->admin_comments($data['module'], $data['module_id'], FALSE);
 				},
 				'size'    => TRUE
-			),
-			array(
-				'content' => button('{base_url}{url}', 'fa-eye', 'Voir les commentaires', 'info'),
+			],
+			[
+				'content' => function($data, $loader){
+					return button($data['url'], 'fa-eye', $loader->lang('see_comments'), 'info');
+				},
 				'size'    => TRUE
-			)
-		))
+			]
+		])
 		->data($comments)
-		->no_data('Il n\'y a pas de commentaire')
+		->no_data($this('no_comments'))
 		->sort_by(1)
 		->display();
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./neofrag/modules/comments/controllers/admin.php
 */

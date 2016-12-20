@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -24,9 +24,9 @@ class m_forum_c_checker extends Controller
 	{
 		if (($forum = $this->model()->check_forum($forum_id, $title)) !== FALSE)
 		{
-			if (is_authorized('forum', 'category_read', $forum['category_id']))
+			if ($this->access('forum', 'category_read', $forum['category_id']))
 			{
-				if (!is_null($forum['url']))
+				if ($forum['url'] !== NULL)
 				{
 					header('Location: '.$forum['url']);
 					$this->model()->increment_redirect($forum_id);
@@ -34,7 +34,7 @@ class m_forum_c_checker extends Controller
 				}
 				else
 				{
-					$announces = $messages = array();
+					$announces = $messages = [];
 					
 					foreach ($this->model()->get_topics($forum_id) as $topic)
 					{
@@ -48,13 +48,14 @@ class m_forum_c_checker extends Controller
 						}
 					}
 					
-					return array(
+					return [
 						$forum_id,
 						$title,
 						$forum['category_id'],
+						$forum['subforums'] ? $this->model()->get_forums($forum_id) : [],
 						$announces,
-						$this->load->library('pagination')->fix_items_per_page($this->config->forum_topics_per_page)->get_data($messages, $page)
-					);
+						$this->pagination->fix_items_per_page($this->config->forum_topics_per_page)->get_data($messages, $page)
+					];
 				}
 			}
 			else
@@ -62,28 +63,20 @@ class m_forum_c_checker extends Controller
 				throw new Exception(NeoFrag::UNAUTHORIZED);
 			}
 		}
-		else
-		{
-			throw new Exception(NeoFrag::UNFOUND);
-		}
 	}
 	
 	public function _new($forum_id, $title)
 	{
-		if (($forum = $this->model()->check_forum($forum_id, $title)) !== FALSE && is_null($forum['url']))
+		if (($forum = $this->model()->check_forum($forum_id, $title)) !== FALSE && $forum['url'] === NULL)
 		{
-			if (is_authorized('forum', 'category_write', $forum['category_id']))
+			if ($this->access('forum', 'category_write', $forum['category_id']))
 			{
-				return array($forum_id, $title, $forum['category_id']);
+				return [$forum_id, $title, $forum['category_id']];
 			}
 			else
 			{
 				throw new Exception(NeoFrag::UNAUTHORIZED);
 			}
-		}
-		else
-		{
-			throw new Exception(NeoFrag::UNFOUND);
 		}
 	}
 	
@@ -91,9 +84,9 @@ class m_forum_c_checker extends Controller
 	{
 		if ($topic = $this->model()->check_topic($topic_id, $title))
 		{
-			if (is_authorized('forum', 'category_read', $topic['category_id']))
+			if ($this->access('forum', 'category_read', $topic['category_id']))
 			{
-				return array(
+				return [
 					$topic_id,
 					$title,
 					$topic['forum_id'],
@@ -105,17 +98,13 @@ class m_forum_c_checker extends Controller
 					$topic['announce'],
 					$topic['locked'],
 					array_shift($messages),
-					$this->load->library('pagination')->fix_items_per_page($this->config->forum_messages_per_page)->get_data($messages, $page)
-				);
+					$this->pagination->fix_items_per_page($this->config->forum_messages_per_page)->get_data($messages, $page)
+				];
 			}
 			else
 			{
 				throw new Exception(NeoFrag::UNAUTHORIZED);
 			}
-		}
-		else
-		{
-			throw new Exception(NeoFrag::UNFOUND);
 		}
 	}
 	
@@ -123,18 +112,14 @@ class m_forum_c_checker extends Controller
 	{
 		if ($topic = $this->model()->check_topic($topic_id, $title))
 		{
-			if (is_authorized('forum', $permission, $topic['category_id']))
+			if ($this->access('forum', $permission, $topic['category_id']))
 			{
-				return array($topic_id, $topic['topic_title'], $topic['announce'], $topic['locked']);
+				return [$topic_id, $topic['topic_title'], $topic['announce'], $topic['locked']];
 			}
 			else
 			{
 				throw new Exception(NeoFrag::UNAUTHORIZED);
 			}
-		}
-		else
-		{
-			throw new Exception(NeoFrag::UNFOUND);
 		}
 	}
 	
@@ -143,31 +128,39 @@ class m_forum_c_checker extends Controller
 		return $this->_topic_announce($topic_id, $title, 'category_lock');
 	}
 	
-	public function _message_edit($message_id, $title)
+	public function _topic_move($topic_id, $title)
 	{
-		if ($message = $this->model()->check_message($message_id, $title))
+		if ($topic = $this->model()->check_topic($topic_id, $title))
 		{
-			if (is_authorized('forum', 'category_modify', $message['category_id']) || (!$message['locked'] && $message['user_id'] == $this->user('user_id')))
+			if ($this->access('forum', 'category_move', $topic['category_id']))
 			{
-				return array($message_id, $message['topic_id'], $message['topic_title'], $message['is_topic'], $message['message'], $message['category_id'], $message['user_id'], $message['username'], $message['avatar'], $message['sex'], $message['online'], $message['admin']);
+				return [$topic_id, $topic['topic_title'], $topic['forum_id']];
 			}
 			else
 			{
 				throw new Exception(NeoFrag::UNAUTHORIZED);
 			}
 		}
-		else
+	}
+	
+	public function _message_edit($message_id, $title)
+	{
+		if ($message = $this->model()->check_message($message_id, $title))
 		{
-			throw new Exception(NeoFrag::UNFOUND);
+			if ($this->access('forum', 'category_modify', $message['category_id']) || (!$message['locked'] && $this->user() && $message['user_id'] == $this->user('user_id')))
+			{
+				return $message;
+			}
+			else
+			{
+				throw new Exception(NeoFrag::UNAUTHORIZED);
+			}
 		}
 	}
 	
 	public function _message_delete($message_id, $title)
 	{
-		if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest')
-		{
-			$this->ajax();
-		}
+		$this->ajax();
 
 		$message = $this->db	->select('m.user_id', 'f.forum_id', 'f.parent_id as category_id', 't.topic_id', 't.title', 't.message_id = m.message_id as is_topic')
 								->from('nf_forum_messages m')
@@ -178,23 +171,13 @@ class m_forum_c_checker extends Controller
 		
 		if ($message && $title == url_title($message['title']))
 		{
-			if (is_authorized('forum', 'category_delete', $message['category_id']) || $message['user_id'] == $this->user('user_id'))
+			if ($this->access('forum', 'category_delete', $message['category_id']) || ($this->user() && $message['user_id'] == $this->user('user_id')))
 			{
-				return array($message_id, $message['title'], $message['topic_id'], $message['forum_id'], $message['is_topic']);
-			}
-			else if ($this->config->ajax_url)
-			{
-				return '<h4 class="alert-heading">Erreur</h4>Vous ne pouvez pas supprimer ce message';
+				return [$message_id, $message['title'], $message['topic_id'], $message['forum_id'], $message['is_topic']];
 			}
 			
 			throw new Exception(NeoFrag::UNAUTHORIZED);
 		}
-		else if ($this->config->ajax_url)
-		{
-			return '<h4 class="alert-heading">Erreur</h4>Ce message a déjà été supprimé.';
-		}
-
-		throw new Exception(NeoFrag::UNFOUND);
 	}
 	
 	public function mark_all_as_read()
@@ -203,28 +186,27 @@ class m_forum_c_checker extends Controller
 		{
 			throw new Exception(NeoFrag::UNAUTHORIZED);
 		}
+
+		return [];
 	}
 	
 	public function _mark_all_as_read($forum_id, $title)
 	{
-		if (($forum = $this->model()->check_forum($forum_id, $title)) !== FALSE && is_null($forum['url']))
+		if (($forum = $this->model()->check_forum($forum_id, $title)) !== FALSE && $forum['url'] === NULL)
 		{
-			if ($this->user() && is_authorized('forum', 'category_read', $forum['category_id']))
+			if ($this->user() && $this->access('forum', 'category_read', $forum['category_id']))
 			{
-				return array($forum_id, $title);
+				return [$forum_id, $title];
 			}
 			else
 			{
 				throw new Exception(NeoFrag::UNAUTHORIZED);
 			}
 		}
-		else
-		{
-			throw new Exception(NeoFrag::UNFOUND);
-		}
-	}}
+	}
+}
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./modules/forum/controllers/checker.php
 */

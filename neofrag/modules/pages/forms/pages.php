@@ -11,43 +11,56 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-$rules = array(
-	'title' => array(
-		'label'         => 'Titre de la page',
-		'value'         => $title,
+$rules = [
+	'title' => [
+		'label'         => '{lang page_title}',
+		'value'         => $this->form->value('title'),
 		'type'          => 'text',
-		'rules'			=> 'required'
-	),
-	'subtitle' => array(
-		'label'         => 'Sous-titre',
-		'value'         => $subtitle,
+		'rules'         => 'required'
+	],
+	'subtitle' => [
+		'label'         => '{lang subtitle}',
+		'value'         => $this->form->value('subtitle'),
 		'type'          => 'text'
-	),
-	'name' => array(
-		'label'         => 'Chemin d\'accès',
-		'value'         => $name,
-		'type'          => 'text'
-	),
-	'content' => array(
-		'label'			=> 'Contenu',
-		'value'			=> $content,
+	],
+	'name' => [
+		'label'         => '{lang access_path}',
+		'value'         => $name = $this->form->value('name'),
+		'type'          => 'text',
+		'check'         => function($value, $post) use ($name){
+			if (!$value)
+			{
+				$value = $post['title'];
+			}
+			
+			$value = url_title($value);
+			
+			if ($value != $name && NeoFrag::loader()->db->select('1')->from('nf_pages')->where('name', $value)->row())
+			{
+				return i18n('access_path_already_used');
+			}
+		}
+	],
+	'content' => [
+		'label'			=> '{lang content}',
+		'value'			=> $this->form->value('content'),
 		'type'			=> 'editor'
-	),
-	'published' => array(
+	],
+	'published' => [
 		'type'			=> 'checkbox',
-		'checked'		=> array('on' => $published),
-		'values'        => array('on' => 'Publier la page dès maintenant')
-	)
-);
+		'checked'		=> ['on' => $this->form->value('published')],
+		'values'        => ['on' => '{lang publish_now}']
+	]
+];
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.2
 ./neofrag/modules/pages/forms/pages.php
 */

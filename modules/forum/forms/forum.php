@@ -11,35 +11,40 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-$rules = array(
-	'title' => array(
-		'label' => 'Titre',
-		'value' => $title,
+$rules = [
+	'title' => [
+		'label' => '{lang title}',
+		'value' => $this->form->value('title'),
 		'type'  => 'text',
 		'rules' => 'required'
-	),
-	'category' => array(
-		'label'  => 'Catégorie',
-		'value'  => $category_id,
-		'values' => $categories,
+	],
+	'category' => [
+		'label'  => '{lang category}',
+		'value'  => $this->form->value('category_id'),
+		'values' => $this->form->value('categories'),
 		'type'   => 'select',
 		'rules'  => 'required'
-	),
-	'description' => array(
-		'label' => 'Description',
-		'value' => $description,
+	],
+	'description' => [
+		'label' => '{lang description}',
+		'value' => $this->form->value('description'),
 		'type'  => 'text'
-	)
-);
+	],
+	'url' => [
+		'label' => '{lang redirect}',
+		'value' => $this->form->value('url'),
+		'type'  => 'url'
+	]
+];
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.2
 ./modules/forum/forms/forum.php
 */

@@ -1,64 +1,79 @@
 <div id="wrapper">
-	<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+	<nav class="navbar navbar-default navbar-static-top" style="margin-bottom: 0">
+		<a href="<?php echo url(); ?>" class="btn btn-default back-to visible-xs"><?php echo icon('fa-sign-out'); ?></a>
+		<a href="#" class="btn btn-default touch-menu visible-xs"><?php echo icon('fa-bars'); ?></a>
 		<div class="navbar-header">
-			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar-collapse-1">
-			<span class="sr-only">Toggle navigation</span>
-			<span class="icon-bar"></span>
-			<span class="icon-bar"></span>
-			<span class="icon-bar"></span>
-			</button>
-			<a class="navbar-brand" href="{base_url}admin.html">NEOFRAG CMS <small><?php echo NEOFRAG_VERSION.($NeoFrag->config->nf_pro ? ' Pro' : ''); ?></small></a>
+			<a class="navbar-brand" href="<?php echo url('admin.html'); ?>"><b>NeoFrag</b> CMS<span class="nf-version"><?php echo NEOFRAG_VERSION.($NeoFrag->config->nf_pro ? ' Pro' : ''); ?></span></a>
 		</div>
 		<div class="collapse navbar-collapse" id="main-navbar-collapse-1">
 			<ul class="nav nav navbar-nav navbar-left">
-				<li><a href="#"><i class="fa fa-bars"></i></a></li>
-				<li><a href="//www.neofrag.com/support.html">{fa-icon support}<span class="hidden-xs hidden-sm"> Support</span></a></li>
-				<li><a href="//www.neofrag.com/forum.html">{fa-icon comment}<span class="hidden-xs hidden-sm"> Forum</span></a></li>
-				<li><a href="//www.neofrag.com/download.html">{fa-icon download}<span class="hidden-xs hidden-sm"> Téléchargements</span></a></li>
-				<li><a href="//www.neofrag.com/documentation.html">{fa-icon list-alt}<span class="hidden-xs hidden-sm"> Documentation</span></a></li>
+				<li><a href="#" class="toggle-menu" data-toggle="sidebar"><?php echo icon('fa-bars'); ?></a></li>
+				<li><a href="https://neofr.ag/support.html"><?php echo icon('fa-support'); ?><span class="hidden-xs hidden-sm"> <?php echo i18n('support'); ?></span></a></li>
+				<li><a href="https://neofr.ag/forum.html"><?php echo icon('fa-comment'); ?><span class="hidden-xs hidden-sm"> <?php echo i18n('forum'); ?></span></a></li>
+				<li><a href="https://neofr.ag/download.html"><?php echo icon('fa-download'); ?><span class="hidden-xs hidden-sm"> <?php echo i18n('downloads'); ?></span></a></li>
+				<li><a href="https://neofr.ag/documentation.html"><?php echo icon('fa-list-alt'); ?><span class="hidden-xs hidden-sm"> <?php echo i18n('documentation'); ?></span></a></li>
 			</ul>
-			<a class="btn btn-default navbar-btn navbar-right" href="{base_url}"><i class="fa fa-sign-out"></i><span class="hidden-xs hidden-sm"> Retour sur le site</span></a>
+			<a class="btn btn-default navbar-btn navbar-right" href="<?php echo url(); ?>"><?php echo icon('fa-sign-out'); ?><span class="hidden-xs hidden-sm"> <?php echo i18n('back_front'); ?></span></a>
 		</div>
-		<div class="navbar-default sidebar" role="navigation">
-			<div class="sidebar-nav navbar-collapse">
-				<ul class="nav" id="side-menu">
-					<li class="sidebar-user">
+	</nav>
+	<nav class="navbar-default sidebar">
+		<div class="sidebar-nav navbar-collapse">
+			<ul class="nav" id="side-menu">
+				<li class="sidebar-user">
+					<div class="row">
+						<div class="col-md-3 col-xs-12">
+							<?php echo $NeoFrag->user->avatar($NeoFrag->user('avatar'), $NeoFrag->user('sex')); ?>
+						</div>
+						<div class="col-md-9 col-xs-12">
+							<span class="user-name"><b><?php echo $NeoFrag->user('username'); ?></b></span>
+						</div>
+						<div class="col-md-9 col-xs-12">
+							<div class="btn-group">
+								<button type="button" class="btn btn-user btn-xs dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+									<?php echo icon('fa-user').' '.icon('fa-angle-down'); ?>
+								</button>
+								<ul class="dropdown-menu" role="menu">
+									<li><a href="<?php echo url('user.html'); ?>"><?php echo icon('fa-user').i18n('my_account'); ?></a></li>
+									<li><a href="<?php echo url('user/edit.html'); ?>"><?php echo icon('fa-cogs').i18n('manage_my_account'); ?></a></li>
+									<li><a href="<?php echo url('user/'.$NeoFrag->user('user_id').'/'.url_title($NeoFrag->user('username')).'.html'); ?>"><?php echo icon('fa-eye').i18n('view_my_profile'); ?></a></li>
+								</ul>
+							</div>
+							<!--<div class="btn-group">
+								<button type="button" class="btn btn-user btn-xs dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+									<span class="alert-badge">3</span>
+									<?php echo icon('fa-envelope-o').' '.icon('fa-angle-down'); ?>
+								</button>
+								<ul class="dropdown-menu" role="menu">
+									<li><a href="#"><?php echo icon('fa-inbox'); ?>Boîte de réception</a></li>
+									<li><a href="#"><?php echo icon('fa-sign-out'); ?>Messages envoyés</a></li>
+									<li><a href="#"><?php echo icon('fa-file-text-o'); ?>Rédiger</a></li>
+								</ul>
+							</div>-->
+							<a href="<?php echo url('user/logout.html'); ?>" class="btn btn-user-logout" ><?php echo icon('fa-close'); ?></a>
+						</div>
+					</div>
+				</li>
+				<?php if (!empty($data['update'])): ?>
+					<li class="sidebar-update">
 						<div class="row">
-							<div class="col-md-3 col-xs-12">
-								<img class="img-circle" src="<?php echo $NeoFrag->user->avatar(); ?>" alt="" />
+							<div class="col-md-12 col-xs-12 text-center">
 							</div>
-							<div class="col-md-9 col-xs-12">
-								<span class="user-name"><b>{user username}</b></span>
+							<div class="col-md-12 col-xs-12 text-center">
+								<h5>
+									Nouvelle mise à jour !
+									<small>NeoFrag <?php echo $data['update']->version; ?></small>
+								</h5>
 							</div>
-							<div class="col-md-9 col-xs-12">
-								<div class="btn-group">
-									<button type="button" class="btn btn-user btn-xs dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-										{fa-icon user} {fa-icon angle-down}
-									</button>
-									<ul class="dropdown-menu" role="menu">
-										<li><a href="{base_url}user.html"><i class="fa fa-user"></i>Mon espace</a></li>
-										<li><a href="{base_url}user/edit.html"><i class="fa fa-cogs"></i>Gérer mon compte</a></li>
-										<li><a href="{base_url}members/<?php echo $NeoFrag->user('user_id'); ?>/<?php echo url_title($NeoFrag->user('username')); ?>.html"><i class="fa fa-eye"></i>Voir mon profil</a></li>
-									</ul>
-								</div>
-								<!--<div class="btn-group">
-									<button type="button" class="btn btn-user btn-xs dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-										<span class="alert-badge">3</span>
-										{fa-icon envelope-o} {fa-icon angle-down}
-									</button>
-									<ul class="dropdown-menu" role="menu">
-										<li><a href="#"><i class="fa fa-inbox"></i>Boîte de réception</a></li>
-										<li><a href="#"><i class="fa fa-sign-out"></i>Messages envoyés</a></li>
-										<li><a href="#"><i class="fa fa-file-text-o"></i>Rédiger</a></li>
-									</ul>
-								</div>-->
-								<a href="{base_url}user/logout.html" class="btn btn-user-logout" >{fa-icon close}</a>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<a href="#" class="btn btn-success btn-block" data-toggle="modal" data-target="#modal-update">Installer !</a>
 							</div>
 						</div>
 					</li>
+				<?php endif; ?>
 <?php
-	$actives  = array();
-	$base_url = $NeoFrag->config->base_url;
+	$actives  = [];
 
 	foreach ($data['menu'] as $link)
 	{
@@ -66,15 +81,17 @@
 		{
 			foreach ($link['url'] as $sublink)
 			{
-				if (preg_match('#^'.substr($sublink['url'], 0, -5).'(?:\.|/)#', $NeoFrag->config->request_url))
+				if (preg_match('#^(.*?)\.html#', $sublink['url'], $match) && preg_match('#^'.$match[1].'(?:\.|/)#', $NeoFrag->config->request_url))
 				{
-					$actives[] = $sublink['url'];
+					$actives[] = $match[1].'.html';
 				}
 			}
 		}
 	}
 
-	usort($actives, create_function('$a, $b', 'return strlen($a) < strlen($b);'));
+	usort($actives, function($a, $b){
+		return strlen($a) < strlen($b);
+	});
 
 	foreach ($data['menu'] as $link)
 	{
@@ -82,99 +99,133 @@
 		{
 			$active  = FALSE;
 			$submenu = '';
+
 			foreach ($link['url'] as $sublink)
 			{
-				$class = array();
-
-				if (!empty($sublink['pro']))
+				if (!isset($sublink['access']) || $sublink['access'])
 				{
-					$class[] = 'forbidden';
-				}
+					$class = [];
 
-				if ($actives && $actives[0] == $sublink['url'])
-				{
-					$active  = TRUE;
-					$class[] = 'active';
-				}
+					if (!empty($sublink['pro']))
+					{
+						$class[] = 'forbidden';
+					}
 
-				$submenu .= '<li><a'.(!empty($class) ? ' class="'.implode(' ', $class).'"' : '').' href="'.$base_url.$sublink['url'].'">'.$NeoFrag->assets->icon($sublink['icon']).$sublink['title'].'</a></li>';
+					if ($actives && $actives[0] == $sublink['url'])
+					{
+						$active  = TRUE;
+						$class[] = 'active';
+					}
+
+					$submenu .= '<li><a'.(!empty($class) ? ' class="'.implode(' ', $class).'"' : '').' href="'.url($sublink['url']).'">'.icon($sublink['icon']).$sublink['title'].'</a></li>';
+				}
 			}
 
-			echo '<li'.(($active) ? ' class="active"' : '').'><a data-toggle="collapse" href="#menu_'.url_title($link['title']).'">'.$NeoFrag->assets->icon($link['icon']).' <span class="hidden-xs">'.$link['title'].'</span><span class="fa arrow"></span></a><ul class="nav nav-second-level">'.$submenu.'</ul></li>';
+			if ($submenu)
+			{
+				echo '<li'.($active ? ' class="active"' : '').'><a data-toggle="collapse" href="#menu_'.url_title($link['title']).'">'.icon($link['icon']).' <span class="hidden-xs">'.$link['title'].'</span><span class="fa arrow"></span></a><ul class="nav nav-second-level'.(!$active ? ' collapse' : '').'">'.$submenu.'</ul></li>';
+			}
 		}
-		else
+		else if (!isset($link['access']) || $link['access'])
 		{
-			echo '<li><a'.(($NeoFrag->config->request_url == $link['url']) ? ' class="active"' : '').' href="'.$base_url.$link['url'].'">'.$NeoFrag->assets->icon($link['icon']).' <span class="hidden-xs">'.$link['title'].'</span></a></li>';
+			echo '<li><a'.($NeoFrag->config->request_url == $link['url'] ? ' class="active"' : '').' href="'.url($link['url']).'">'.icon($link['icon']).' <span class="hidden-xs">'.$link['title'].'</span></a></li>';
 		}
 	}
 ?>
-				</ul>
-			</div>
+			</ul>
 		</div>
 	</nav>
 	<div id="page-wrapper">
 		<div class="row">
 			<div class="col-lg-12">
-				<!-- //TODO -->
-				<div class="pull-right" style="margin-top: 25px;">
-					<!-- <a class="btn btn-outline btn-success btn-sm">{fa-icon unlock-alt} Permissions</a> 
-					<a class="btn btn-outline btn-info btn-sm">{fa-icon wrench} Configuration</a> -->
-					<?php
-						foreach ($data['menu_tabs'] as $tab)
-						{
-							if (isset($tab['help']))
-							{
-								echo '<a class="btn btn-outline btn-warning btn-sm" href="'.$base_url.$tab['url'].'" data-help="'.$tab['help'].'">{fa-icon life-bouy} Aide</a> ';
-							}
-						}
-					?>
-					
+				<h1 class="page-header"><?php echo $NeoFrag->output->data['module_title']; if (!empty($NeoFrag->output->data['module_subtitle'])) echo '<small>'.$NeoFrag->output->data['module_subtitle'].'</small>'; ?></h1>
+				<div class="page-actions pull-right">
+					<?php if ($data['module_method'] == 'index' && $NeoFrag->module->get_permissions('default') && $NeoFrag->module('access')->is_authorized()): ?>
+						<a class="btn btn-outline btn-success btn-sm" href="<?php echo url('admin/access/edit/'.$NeoFrag->module->name.'.html'); ?>"><?php echo icon('fa-unlock-alt'); ?><span class="hidden-sm"> Permissions</span></a>
+					<?php endif; ?>
+					<?php if (method_exists($NeoFrag->module, 'settings') && $NeoFrag->module('addons')->is_authorized()): ?>
+						<a class="btn btn-outline btn-warning btn-sm" href="<?php echo url('admin/addons/module/'.$NeoFrag->module->name.'.html'); ?>"><?php echo icon('fa-wrench'); ?><span class="hidden-sm"> <?php echo i18n('configuration'); ?></span></a>
+					<?php endif; ?>
+					<?php if (($help = $NeoFrag->module->load->controller('admin_help')) && $help->has_method($data['module_method'])): ?>
+					<?php NeoFrag::loader()->js('neofrag.help'); ?>
+					<a class="btn btn-outline btn-info btn-sm" href="<?php echo url($NeoFrag->config->request_url); ?>" data-help="<?php echo 'admin/help/'.$NeoFrag->module->name.'/'.$data['module_method'].'.html'; ?>"><?php echo icon('fa-life-bouy'); ?><span class="hidden-sm"> <?php echo i18n('help'); ?></span></a>
+					<?php endif; ?>
 				</div>
-				<h1 class="page-header">{module_title} <small>{module_subtitle}</small></h1>
 			</div>
 		</div>
 		<div class="row">
-			<?php if ($data['menu_tabs']): ?>
-				<nav class="navbar navbar-default box-shadow" role="navigation">
-					<div class="navbar-header">
-						<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar-collapse2">
-							<span class="sr-only">Actions</span>
-							<span class="icon-bar"></span>
-							<span class="icon-bar"></span>
-							<span class="icon-bar"></span>
-						</button>
-					</div>
-					<div class="collapse navbar-collapse" id="main-navbar-collapse2">
-						<ul class="nav navbar-nav">
-						<?php
-							$actives = array();
-							
-							foreach ($data['menu_tabs'] as $tab)
-							{
-								if (strpos($NeoFrag->config->request_url, substr($tab['url'], 0, -5)) === 0 && !isset($tab['help']))
-								{
-									$actives[] = $tab['url'];
-								}
-							}
-
-							usort($actives, create_function('$a, $b', 'return strlen($a) < strlen($b);'));
-
-							foreach ($data['menu_tabs'] as $tab)
-							{
-								if (!isset($tab['help']))
-								{
-									echo '<li'.(($actives && $actives[0] == $tab['url']) ? ' class="active"' : '').'><a href="'.$base_url.$tab['url'].'"><img src="{image '.$tab['icon'].'}" alt="" /> <span class="hidden-phone">'.$tab['title'].'</span></a></li>';
-								}
-							}
-						?>
-						</ul>
-					</div>
-				</nav>
-			<?php endif; ?>
 			<div id="alerts"></div>
-			{view actions}
+			<?php echo $loader->view('actions', $data); ?>
 		</div>
-		{module}
-		</div>
+		<?php echo $NeoFrag->output->data['module']; ?>
 	</div>
 </div>
+<?php if (!empty($data['update'])): ?>
+	<div id="modal-update" class="modal fade">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="myModalLabel">Mise à jour de NeoFrag <?php echo version_format(NEOFRAG_VERSION).' '.icon('fa-chevron-right').' '.version_format($data['update']->version); ?></h4>
+				</div>
+				<div class="modal-body">
+					<?php if (!empty($data['update']->features)): ?>
+						<div class="update-features">
+							<?php echo $data['update']->features; ?>
+						</div>
+						<hr />
+					<?php endif; ?>
+					<div class="steps-body text-center">
+						<div class="row" style="padding: 0 110px;">
+							<div class="col-md-4">
+								<div class="progress">
+									<div class="progress-bar" role="progressbar" data-step="50,50"></div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="progress">
+									<div class="progress-bar" role="progressbar" data-step="100"></div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="progress">
+									<div class="progress-bar" role="progressbar" data-step="95,5"></div>
+								</div>
+							</div>
+						</div>
+						<div class="row steps-legends">
+							<div class="col-md-3">
+								<div class="step">
+									<?php echo icon('fa-refresh'); ?>
+								</div>
+								<span class="span-legend">Lancement</span>
+							</div>
+							<div class="col-md-3">
+								<div class="step">
+									<?php echo icon('fa-floppy-o'); ?>
+								</div>
+								<span class="span-legend">Sauvegarde</span>
+							</div>
+							<div class="col-md-3">
+								<div class="step">
+									<?php echo icon('fa-arrow-circle-o-down'); ?>
+								</div>
+								<span class="span-legend">Téléchargement</span>
+							</div>
+							<div class="col-md-3">
+								<div class="step">
+									<?php echo icon('fa-cog'); ?>
+								</div>
+								<span class="span-legend">Installation</span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-link pull-left" data-dismiss="modal">Plus tard</button>
+					<button type="button" class="btn btn-primary" data-loading-text="Installation en cours...">Lancer la mise à jour</button>
+				</div>
+			</div>
+		</div>
+	</div>
+<?php endif; ?>

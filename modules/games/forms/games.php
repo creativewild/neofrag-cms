@@ -11,70 +11,69 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-$rules = array(
-	'title' => array(
-		'label'       => 'Titre du jeu',
-		'value'       => $title,
+$rules = [
+	'title' => [
+		'label'       => '{lang game_title}',
+		'value'       => $this->form->value('title'),
 		'type'        => 'text',
 		'rules'       => 'required'
-	),
-	'parent_id' => array(
-		'label'       => 'Jeu parent',
-		'value'       => $parent_id,
-		'values'      => $games,
+	],
+	'parent_id' => [
+		'label'       => '{lang parent_game}',
+		'value'       => $this->form->value('parent_id'),
+		'values'      => $this->form->value('games'),
 		'type'        => 'select'
-	),
-	'image' => array(
-		'label'       => 'Bannière',
-		'value'       => $image_id,
+	],
+	'image' => [
+		'label'       => '{lang banner}',
+		'value'       => $this->form->value('image_id'),
 		'upload'      => 'games',
 		'type'        => 'file',
-		'info'        => ' d\'image (max. '.(file_upload_max_size() / 1024 / 1024).' Mo)',
+		'info'        => i18n('file_picture', file_upload_max_size() / 1024 / 1024),
 		'check'       => function($filename, $ext){
-			if (!in_array($ext, array('gif', 'jpeg', 'jpg', 'png')))
+			if (!in_array($ext, ['gif', 'jpeg', 'jpg', 'png']))
 			{
-				return 'Veuiller choisir un fichier d\'image';
+				return i18n('select_image_file');
 			}
 		}
-	),
-	'icon' => array(
-		'label'       => 'Icône',
-		'value'       => $icon_id,
+	],
+	'icon' => [
+		'label'       => '{lang icon}',
+		'value'       => $this->form->value('icon_id'),
 		'upload'      => 'games/icons',
 		'type'        => 'file',
-		'info'        => ' d\'image (format carré min. 16px et max. '.(file_upload_max_size() / 1024 / 1024).' Mo)',
+		'info'        => i18n('file_icon', 16, file_upload_max_size() / 1024 / 1024),
 		'check'       => function($filename, $ext){
-			if (!in_array($ext, array('gif', 'jpeg', 'jpg', 'png')))
+			if (!in_array($ext, ['gif', 'jpeg', 'jpg', 'png']))
 			{
-				return 'Veuiller choisir un fichier d\'image';
+				return i18n('select_image_file');
 			}
 			
 			list($w, $h) = getimagesize($filename);
 			
 			if ($w != $h)
 			{
-				return 'L\'icône doit être carré';
+				return i18n('icon_must_be_square');
 			}
 			else if ($w < 16)
 			{
-				return 'L\'icône doit faire au moins 16px';
+				return i18n('icon_size_error', 16);
 			}
 		},
 		'post_upload' => function($filename){
 			image_resize($filename, 16, 16);
 		}
-	)
-	
-);
+	]
+];
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.2
 ./modules/games/forms/games.php
 */

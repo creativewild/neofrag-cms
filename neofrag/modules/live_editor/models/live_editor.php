@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -37,9 +37,9 @@ class m_live_editor_m_live_editor extends Model
 	public function set_disposition($disposition_id, $disposition)
 	{
 		$this->db	->where('disposition_id', $disposition_id)
-					->update('nf_dispositions', array(
+					->update('nf_dispositions', [
 						'disposition' => serialize($disposition)
-					));
+					]);
 	}
 	
 	public function delete_disposition($rows)
@@ -86,7 +86,7 @@ class m_live_editor_m_live_editor extends Model
 							
 		if ($widget)
 		{
-			if (!is_null($widget['settings']))
+			if ($widget['settings'] !== NULL)
 			{
 				$widget['settings'] = serialize($widget['settings']);
 			}
@@ -101,25 +101,27 @@ class m_live_editor_m_live_editor extends Model
 	
 	public function get_widgets(&$widgets, &$types)
 	{
-		foreach (array_keys($this->addons('widget')) as $widget_name)
+		foreach ($this->addons->get_widgets() as $widget)
 		{
-			$w = $this->load->widget($widget_name);
-			
-			$widgets[$widget_name] = $w->name;
-			
-			if (!empty($w->types))
+			if ($widget->name == 'error')
 			{
-				$types[$widget_name] = $w->types;
-				natsort($types[$widget_name]);
+				continue;
+			}
+
+			$widgets[$widget->name] = $widget->get_title();
+			
+			if (!empty($widget->types))
+			{
+				$types[$widget->name] = $widget->load->lang($widget->types, NULL);
+				array_natsort($types[$widget->name]);
 			}
 		}
 		
-		natsort($widgets);
-		natsort($types);
+		array_natsort($widgets);
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.2
 ./neofrag/modules/live_editor/models/live_editor.php
 */

@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -32,19 +32,19 @@ class Panel
 	{
 		$style = !empty($this->style) ? $this->style : 'panel-default';
 		
-		return '<div class="panel '.$style.'"'.(!is_null($id) ? ' data-original-style="'.$style.'"' : '').'>
-				'.(!empty($this->title) ? '<div class="panel-heading"><h3 class="panel-title">'.(!empty($this->url) ? '<a href="'.$this->url.'">' : '').(!empty($this->icon) ? NeoFrag::loader()->assets->icon($this->icon).' ' : '').$this->title.(!empty($this->url) ? '</a>' : '').'</h3></div>' : '').'
+		return '<div class="panel '.$style.'"'.($id !== NULL ? ' data-original-style="'.$style.'"' : '').'>
+				'.(!empty($this->title) ? '<div class="panel-heading"><h3 class="panel-title">'.(!empty($this->url) ? '<a href="'.url($this->url).'">' : '').(!empty($this->icon) ? icon($this->icon).' ' : '').$this->title.(!empty($this->url) ? '</a>' : '').'</h3></div>' : '').'
 				'.(!empty($this->form) ? '<form action="" method="post">' : '').'
 				'.($body = !empty($this->content) && (!isset($this->body) || $this->body) ? '<div class="panel-body">' : '').'
 				'.(!empty($this->content) ? $this->content : '').'
 				'.($body ? '</div>' : '').'
-				'.(!empty($this->footer) ? '<div class="panel-footer text-'.(!empty($this->footer_align) && in_array($this->footer_align, array('left', 'right')) ? $this->footer_align : 'center').'">'.$this->footer.'</div>' : '').'
+				'.(!empty($this->footer) ? '<div class="panel-footer text-'.(!empty($this->footer_align) && in_array($this->footer_align, ['left', 'right']) ? $this->footer_align : 'center').'">'.$this->footer.'</div>' : '').'
 				'.(!empty($this->form) ? '</form>' : '').'
 			</div>';
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/classes/panel.php
 */

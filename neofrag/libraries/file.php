@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,48 +20,47 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class File extends Library
 {	
-	public function add($files, $var, &$filename, $file_id = NULL, $dir = NULL)
+	public function upload($files, $dir = NULL, &$filename = NULL, $file_id = NULL, $var = NULL)
 	{
-		if (!file_exists($dir = './upload/'.($dir ?: 'unknow')))
-		{
-			if (!mkdir($dir, 0777, TRUE))
-			{
-				return FALSE;
-			}
-		}
+		dir_create($dir = 'upload/'.($dir ?: 'unknow'));
 		
 		do
 		{
-			$file = unique_id().'.'.extension(basename($files['name'][$var]));
+			$file = unique_id().'.'.extension(basename($var ? $files['name'][$var] : $files['name']));
 		}
-		while (file_exists($filename = $dir.'/'.$file));
+		while (check_file($filename = $dir.'/'.$file));
 		
-		if (move_uploaded_file($files['tmp_name'][$var], $filename))
+		if (move_uploaded_file($var ? $files['tmp_name'][$var] : $files['tmp_name'], $filename))
 		{
 			if ($file_id)
 			{
 				$this->_unlink($file_id);
 				
 				$this->db	->where('file_id', $file_id)
-							->update('nf_files', array(
+							->update('nf_files', [
 								'user_id' => $this->user() ? $this->user('user_id') : NULL,
 								'path'    => $filename,
-								'name'    => $files['name'][$var]
-							));
+								'name'    => $var ? $files['name'][$var] : $files['name']
+							]);
 				
 				return $file_id;
 			}
 			else
 			{
-				return $this->db->insert('nf_files', array(
-					'user_id' => $this->user() ? $this->user('user_id') : NULL,
-					'path'    => $filename,
-					'name'    => $files['name'][$var]
-				));
+				return $this->add($filename, $var ? $files['name'][$var] : $files['name']);
 			}
 		}
 		
 		return FALSE;
+	}
+	
+	public function add($path, $name)
+	{
+		return $this->db->insert('nf_files', [
+			'user_id' => $this->user() ? $this->user('user_id') : NULL,
+			'path'    => $path,
+			'name'    => $name
+		]);
 	}
 	
 	public function delete($files)
@@ -79,7 +78,7 @@ class File extends Library
 	
 	private function _unlink($file_id)
 	{
-		if (file_exists($file = $this->db->select('path')->from('nf_files')->where('file_id', $file_id)->row()))
+		if (check_file($file = $this->db->select('path')->from('nf_files')->where('file_id', $file_id)->row()))
 		{
 			unlink($file);
 		}
@@ -87,6 +86,6 @@ class File extends Library
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/libraries/file.php
 */

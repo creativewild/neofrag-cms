@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -42,7 +42,7 @@ abstract class Controller_Module extends Controller
 	{
 		if ($condition)
 		{
-			$this->_parent->add_action($url, $title, $icon);
+			$this->load->object->add_action($url, $title, $icon);
 		}
 
 		return $this;
@@ -50,6 +50,6 @@ abstract class Controller_Module extends Controller
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.4
 ./neofrag/classes/controller_module.php
 */

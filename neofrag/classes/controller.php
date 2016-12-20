@@ -11,85 +11,78 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-abstract class Controller extends NeoFrag
+abstract class Controller extends Translatable
 {
-	protected $_parent;
+	public $load;
 
-	public function __construct($parent)
+	public function __construct($name)
 	{
-		$this->load    = NeoFrag::get_loader();
-		$this->_parent = $parent;
+		$this->name = $name;
 	}
 
-	public function method($name, $args = array())
+	public function has_method($name)
 	{
-		if (method_exists($this, $name))
+		$r = new ReflectionClass($this);
+		
+		try
 		{
-			if (!is_array($args))
-			{
-				if (is_null($args))
-				{
-					$args = array();
-				}
-				else
-				{
-					$args = array($args);
-				}
-			}
-
-			ob_start();
-			$result = call_user_func_array(array($this, $name), $args);
-			$output = ob_get_clean();
+			$method = $r->getMethod($name);
+			return $method->class == ($class = get_class($this)) || substr($class, 0, 2) == 'o_' && substr($class, 2) == $method->class;
+		}
+		catch (ReflectionException $error)
+		{
 			
-			if (!empty($result))
+		}
+	}
+
+	public function method($name, $args = [])
+	{
+		if (!is_array($args))
+		{
+			if ($args === NULL)
 			{
-				echo $output;
-				return $result;
+				$args = [];
 			}
 			else
 			{
-				return $output;
+				$args = [$args];
 			}
+		}
+
+		ob_start();
+		$result = call_user_func_array([$this, $name], $args);
+		$output = ob_get_clean();
+		
+		if (!empty($result))
+		{
+			echo $output;
+			return $result;
 		}
 		else
 		{
-			$this->profiler->log('Méthode '.$name.' inexistante', Profiler::WARNING);
-			return FALSE;
+			return $output;
 		}
 	}
 
-	public function model($model = '')
+	public function model($model = NULL)
 	{
-		if (!$model)
-		{
-			$model = substr(get_class($this->_parent), strlen('m_'));
-		}
-
-		return $this->load->model($this->_parent, $model);
+		return $this->load->object->load->model($model);
 	}
 
-	public function extension($extension)
+	public function is_authorized($action)
 	{
-		if ($this->config->extension_url != $extension)
-		{
-			throw new Exception(NeoFrag::UNFOUND);
-		}
-		
-		
-		$this->config->extension_url = $extension;
-
-		return $this;
+		return $this->access($this->load->object->name, $action);
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.2
 ./neofrag/classes/controller.php
 */

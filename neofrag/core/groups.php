@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,42 +20,43 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class Groups extends Core
 {
-	private $_groups = array();
+	private $_groups = [];
 	
 	public function __construct()
 	{
 		parent::__construct();
 		
-		$users = $this->db->select('user_id', 'admin')->from('nf_users')->get();
+		$users = $this->db->select('user_id', 'admin')->from('nf_users')->where('deleted', FALSE)->get();
 		
-		$this->_groups = array(
-			'admins' => array(
+		$this->_groups = [
+			'admins' => [
 				'name'  => 'admins',
-				'title' => $this->lang('admins'),
+				'title' => NeoFrag::loader()->lang('group_admins'),
 				'icon'  => 'fa-rocket',
 				'users' => array_map('intval', array_map(function($a){return intval($a['user_id']);}, array_filter($users, function($a){return $a['admin'];}))),
 				'auto'  => 'neofrag'
-			),
-			'members' => array(
+			],
+			'members' => [
 				'name'  => 'members',
-				'title' => $this->lang('members'),
+				'title' => NeoFrag::loader()->lang('group_members'),
 				'icon'  => 'fa-user',
 				'users' => array_map('intval', array_map(function($a){return intval($a['user_id']);}, array_filter($users, function($a){return !$a['admin'];}))),
 				'auto'  => 'neofrag'
-			),
-			'visitors' => array(
+			],
+			'visitors' => [
 				'name'  => 'visitors',
-				'title' => $this->lang('visitors'),
+				'title' => NeoFrag::loader()->lang('group_visitors'),
 				'icon'  => '',
 				'users' => NULL,
 				'auto'  => 'neofrag'
-			)
-		);
+			]
+		];
 		
-		$groups = $this->db	->select('g.group_id', 'g.name', 'g.color', 'g.icon', 'IFNULL(gl.title, g.name) AS title', 'GROUP_CONCAT(ug.user_id) AS users', 'g.auto')
+		$groups = $this->db	->select('g.group_id', 'g.name', 'g.color', 'g.icon', 'IFNULL(gl.title, g.name) AS title', 'GROUP_CONCAT(u.user_id) AS users', 'g.auto')
 							->from('nf_groups g')
-							->join('nf_groups_lang gl', 'gl.group_id = g.group_id')
+							->join('nf_groups_lang gl',  'gl.group_id = g.group_id')
 							->join('nf_users_groups ug', 'ug.group_id = g.group_id')
+							->join('nf_users u',         'ug.user_id  = u.user_id AND u.deleted = "0"')
 							->where('gl.lang', $this->config->lang, 'OR')
 							->where('gl.lang', NULL)
 							->group_by('g.group_id')
@@ -64,47 +65,45 @@ class Groups extends Core
 
 		foreach ($groups as $group)
 		{
-			$group_id = url_title($group['name']);
-			
 			if ($group['auto'])
 			{
 				if ($group['color'])
 				{
-					$this->_groups[$group_id]['color'] = $group['color'];
+					$this->_groups[$group['name']]['color'] = $group['color'];
 				}
 				
 				if ($group['icon'])
 				{
-					$this->_groups[$group_id]['icon'] = $group['icon'];
+					$this->_groups[$group['name']]['icon'] = $group['icon'];
 				}
 				
-				$this->_groups[$group_id]['id']   = $group['group_id'];
-				$this->_groups[$group_id]['auto'] = TRUE;
+				$this->_groups[$group['name']]['id']   = $group['group_id'];
+				$this->_groups[$group['name']]['auto'] = TRUE;
 			}
 			else
 			{
-				$this->_groups[url_title($group['group_id'])] = array(
+				$this->_groups[url_title($group['group_id'])] = [
 					'id'    => $group['group_id'],
 					'name'  => $group['name'],
 					'title' => $group['title'],
 					'color' => $group['color'],
 					'icon'  => $group['icon'],
-					'users' => !empty($group['users']) ? array_map('intval', explode(',', $group['users'])) : array(),
+					'users' => !empty($group['users']) ? array_map('intval', explode(',', $group['users'])) : [],
 					'auto'  => FALSE
-				);
+				];
 			}
 		}
-
-		foreach ($this->get_modules() as $module)
+		
+		foreach ($this->addons->get_modules() as $module)
 		{
 			if (method_exists($module, 'groups'))
 			{
 				foreach ($module->groups() as $id => $group)
 				{
-					$group_id = url_title($module->get_name().'_'.$id);
+					$group_id = url_title($module->name.'_'.$id);
 					
 					$this->_groups[$group_id]         = !empty($this->_groups[$group_id]) ? array_merge($group, $this->_groups[$group_id]) : $group;
-					$this->_groups[$group_id]['auto'] = 'module_'.$module->get_name();
+					$this->_groups[$group_id]['auto'] = 'module_'.$module->name;
 					
 					if (empty($this->_groups[$group_id]['icon']))
 					{
@@ -113,11 +112,25 @@ class Groups extends Core
 				}
 			}
 		}
+		
+		foreach ($this->_groups as $group_id => &$group)
+		{
+			if (array_key_exists('users', $group))
+			{
+				$group['url'] = url_title($group_id).($group['auto'] != 'neofrag' ? '/'.$group['name'] : '');
+			}
+			else
+			{
+				unset($this->_groups[$group_id]);
+			}
+			
+			unset($group);
+		}
 
 		uasort($this->_groups, function($a, $b){
 			if ($a['auto'] == 'neofrag' && $b['auto'] == 'neofrag')
 			{
-				return strnatcmp($a['title'], $b['title']);
+				return str_nat($a['title'], $b['title']);
 			}
 			else if ($a['auto'] == 'neofrag')
 			{
@@ -127,12 +140,12 @@ class Groups extends Core
 			{
 				return 1;
 			}
-			else if (($cmp = strnatcmp($a['auto'], $b['auto'])) != 0)
+			else if (($cmp = str_nat($a['auto'], $b['auto'])) != 0)
 			{
 				return $cmp;
 			}
 			
-			return strnatcmp($a['title'], $b['title']);
+			return str_nat($a['title'], $b['title']);
 		});
 	}
 	
@@ -140,19 +153,19 @@ class Groups extends Core
 	{
 		if (func_num_args() == 1)
 		{
-			$groups = array();
+			$groups = [];
 			
 			foreach ($this->_groups as $group_id => $group)
 			{
 				if (!empty($group['users']) && in_array($user_id, $group['users']))
 				{
-					$groups[$group['id']] = $group_id;
+					$groups[] = $group_id;
 				}
 			}
 			
 			$groups = array_unique($groups);
 			
-			return empty($groups) ? array($this->_groups['visitors']['id']) : $groups;
+			return $groups ?: ['visitors'];
 		}
 		else
 		{
@@ -162,7 +175,7 @@ class Groups extends Core
 
 	public function user_groups($user_id, $label = TRUE)
 	{
-		$groups = array();
+		$groups = [];
 		
 		foreach ($this->_groups as $group_id => $group)
 		{
@@ -184,8 +197,8 @@ class Groups extends Core
 				$link = FALSE;
 			}
 			
-			$class = !empty($this->_groups[$group_id]['color']) && in_array($this->_groups[$group_id]['color'], array('default', 'primary', 'success', 'info', 'warning', 'danger')) ? $this->_groups[$group_id]['color'] : 'default';
-			return '<'.($link ? 'a href="{base_url}members/group/'.url_title($group_id).($this->_groups[$group_id]['auto'] != 'neofrag' ? '/'.url_title($this->_groups[$group_id]['title']) : '').'.html"' : 'span').' class="label label-'.$class.'"'.(!empty($this->_groups[$group_id]['color']) && $this->_groups[$group_id]['color'][0] == '#' ? ' style="background-color: '.$this->_groups[$group_id]['color'].'"' : '').'>'.(!empty($this->_groups[$group_id]['icon']) ? $this->assets->icon($this->_groups[$group_id]['icon']).'&nbsp;&nbsp;' : '').$this->_groups[$group_id]['title'].'</'.($link ? 'a' : 'span').'>';
+			$class = !empty($this->_groups[$group_id]['color']) && in_array($this->_groups[$group_id]['color'], array_keys(get_colors())) ? $this->_groups[$group_id]['color'] : 'default';
+			return '<'.($link ? 'a href="'.url('members/group/'.$this->_groups[$group_id]['url'].'.html').'"' : 'span').' class="label label-'.$class.'"'.(!empty($this->_groups[$group_id]['color']) && $this->_groups[$group_id]['color'][0] == '#' ? ' style="background-color: '.$this->_groups[$group_id]['color'].'"' : '').'>'.(!empty($this->_groups[$group_id]['icon']) ? icon($this->_groups[$group_id]['icon']).'&nbsp;&nbsp;' : '').$this->_groups[$group_id]['title'].'</'.($link ? 'a' : 'span').'>';
 		}
 		else
 		{
@@ -193,13 +206,55 @@ class Groups extends Core
 		}
 	}
 	
-	public function profiler()
+	public function check_group($args)
 	{
-
+		$n = count($args);
+		
+		if ($n == 1)
+		{
+			return $this->_groups[$args[0]] + ['unique_id' => $args[0]];
+		}
+		
+		if ($n == 3)
+		{
+			list($module, $group_id, $name) = $args;
+			$group_id = $module.'-'.$group_id;
+		}
+		else if ($n == 2)
+		{
+			list($group_id, $name) = $args;
+		}
+		
+		if (isset($this->_groups[$group_id]) && $name == $this->_groups[$group_id]['name'])
+		{
+			return $this->_groups[$group_id] + ['unique_id' => $group_id];
+		}
+		
+		return FALSE;
+	}
+	
+	public function delete($module, $id)
+	{
+		$group_id = url_title($module.'_'.$id);
+		
+		if (isset($this->_groups[$group_id]))
+		{
+			if (!empty($this->_groups[$group_id]['id']))
+			{
+				$this->db	->where('group_id', $this->_groups[$group_id]['id'])
+							->delete('nf_groups');
+			}
+			
+			$this->access->revoke($group_id);
+			
+			unset($this->_groups[$group_id]);
+		}
+		
+		return $this;
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/core/groups.php
 */

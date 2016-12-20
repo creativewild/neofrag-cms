@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -76,8 +76,6 @@ class m_live_editor_c_ajax_checker extends Controller_Module
 				return $args;
 			}
 		}
-		
-		throw new Exception(NeoFrag::UNFOUND);
 	}
 	
 	public function widget_move()
@@ -101,15 +99,13 @@ class m_live_editor_c_ajax_checker extends Controller_Module
 																	->where('widget_id', $post['widget_id'])
 																	->row())
 			{
-				return array($widget['widget'], $widget['type'], $widget['settings'] ? unserialize($widget['settings']) : NULL);
+				return [$widget['widget'], $widget['type'], $widget['settings'] ? unserialize($widget['settings']) : NULL];
 			}
-			else if (!empty($post['widget']) && !empty($post['type']))
+			else if (!empty($post['widget']) && isset($post['type']))
 			{
-				return array($post['widget'], $post['type']);
+				return [$post['widget'], $post['type'] ?: 'index'];
 			}
 		}
-		
-		throw new Exception(NeoFrag::UNFOUND);
 	}
 	
 	public function widget_settings()
@@ -118,15 +114,13 @@ class m_live_editor_c_ajax_checker extends Controller_Module
 		{
 			if ($widget_id == -1)
 			{
-				return array();
+				return [];
 			}
 			else if ($widget = $this->model()->check_widget($disposition[$row_id]->cols[$col_id]->widgets[$widget_id]->widget_id))
 			{
 				return $widget;
 			}
 		}
-		
-		throw new Exception(NeoFrag::UNFOUND);
 	}
 	
 	public function widget_update()
@@ -143,11 +137,9 @@ class m_live_editor_c_ajax_checker extends Controller_Module
 				$widget['type']     = $type;
 				$widget['settings'] = $settings;
 				
-				return array_merge(array($disposition_id, $disposition, $row_id, $col_id, $widget_id), array_values($widget));
+				return array_merge([$disposition_id, $disposition, $row_id, $col_id, $widget_id], array_values($widget));
 			}
 		}
-		
-		throw new Exception(NeoFrag::UNFOUND);
 	}
 	
 	public function widget_delete()
@@ -157,23 +149,20 @@ class m_live_editor_c_ajax_checker extends Controller_Module
 	
 	private function _check_disposition()
 	{
-		if ($this->user('admin') && !array_diff(array_keys($args = array_intersect_key(post(), array_flip(func_get_args()))), func_get_args()))
+		if ($this->user('admin') && $check = post_check(func_get_args()))
 		{
-			$args = array_merge(array_flip(func_get_args()), $args);
-			array_splice($args, 1, 0, array($this->model()->get_disposition($args['disposition_id'], $theme, $page, $zone)));
+			array_splice($check, 1, 0, [$this->model()->get_disposition($check['disposition_id'], $theme, $page, $zone)]);
 			
-			$args[] = $theme;
-			$args[] = $page;
-			$args[] = $zone;
+			$check[] = $theme;
+			$check[] = $page;
+			$check[] = $zone;
 			
-			return array_values($args);
+			return array_values($check);
 		}
-		
-		throw new Exception(NeoFrag::UNFOUND);
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/modules/live_editor/controllers/ajax_checker.php
 */

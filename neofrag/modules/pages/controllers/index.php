@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -24,15 +24,15 @@ class m_pages_c_index extends Controller_Module
 	{
 		$this->title($title);
 		
-		return new Panel(array(
+		return new Panel([
 			'title'   => $title.($subtitle ? ' <small>'.$subtitle.'</small>' : ''),
 			'icon'    => 'fa-file-text-o',
 			'content' => bbcode($content)
-		));
+		]);
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/modules/pages/controllers/index.php
 */

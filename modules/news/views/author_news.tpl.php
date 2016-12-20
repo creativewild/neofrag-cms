@@ -3,12 +3,12 @@
 	<?php foreach ($data['news'] as $news): ?>
 	<li class="list-group-item">
 		<span class="label label-default pull-right"><?php echo $news['category_title']; ?></span>
-		<a href="{base_url}news/<?php echo $news['news_id']; ?>/<?php echo url_title($news['title']); ?>.html"><?php echo str_shortener($news['title'], 35); ?></a>
+		<a href="<?php echo url('news/'.$news['news_id'].'/'.url_title($news['title']).'.html'); ?>"><?php echo str_shortener($news['title'], 35); ?></a>
 	</li>
 	<?php endforeach; ?>
 </ul>
 <?php else: ?>
 <div class="panel-body text-center">
-	L'auteur n'a pas publié d'autre actualité
+	<?php echo i18n('no_news_from_author'); ?>
 </div>
 <?php endif; ?>

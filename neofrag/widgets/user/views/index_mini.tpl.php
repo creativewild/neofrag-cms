@@ -1,14 +1,17 @@
-<ul class="nav navbar-nav navbar-right">
+<ul class="nav navbar-nav <?php echo !empty($data['align']) ? $data['align'] : 'navbar-right'; ?>">
 	<?php if ($NeoFrag->user()): ?>
-		<li><p class="navbar-text">Bienvenue <a href="{base_url}user.html"><?php echo $NeoFrag->user('username'); ?></a></p></li>
-		<li><a href="{base_url}user/edit.html"><i class="fa fa-cogs"></i></a></li>
-		<li><a href="{base_url}members/<?php echo $this->user('user_id'); ?>/<?php echo url_title($NeoFrag->user('username')); ?>.html"><i class="fa fa-eye"></i></a></li>
-		<?php if ($NeoFrag->user('admin') == TRUE): ?>
-			<li><a href="{base_url}admin.html"><i class="fa fa-dashboard"></i></a></li>
+		<li><p class="navbar-text"><?php echo i18n('welcome'); ?></p></li>
+		<li data-toggle="tooltip" title="Gérer mon compte"><a href="<?php echo url('user/edit.html'); ?>"><?php echo icon('fa-cogs'); ?></a></li>
+		<li data-toggle="tooltip" title="Messagerie">
+			<?php if ($messages = $NeoFrag->user->get_messages()): ?><span class="label label-danger pull-right"><?php echo $messages; ?></span><?php endif; ?>
+			<a href="<?php echo url('user/messages.html'); ?>"><?php echo icon('fa-envelope-o'); ?></a>
+		</li>
+		<?php if ($NeoFrag->access->admin()): ?>
+			<li data-toggle="tooltip" title="Administration"><a href="<?php echo url('admin.html'); ?>"><?php echo icon('fa-dashboard'); ?></a></li>
 		<?php endif; ?>
-		<li><a href="{base_url}user/logout.html"><i class="fa fa-close"></i></a></li>
+		<li data-toggle="tooltip" title="Déconnexion"><a href="<?php echo url('user/logout.html'); ?>"><?php echo icon('fa-close'); ?></a></li>
 	<?php else: ?>
-		<li><p class="navbar-text"><a href="{base_url}user.html">Créer un compte</a></p></li>
-		<li><a href="{base_url}user.html"><i class="fa fa-sign-out"></i>&nbsp;&nbsp;Connexion</a></li>
+		<li><p class="navbar-text"><a href="<?php echo url('user.html'); ?>"><?php echo i18n('create_account'); ?></a></p></li>
+		<li><a href="<?php echo url('user.html'); ?>"><?php echo icon('fa-sign-in').' '.i18n('login'); ?></a></li>
 	<?php endif; ?>
 </ul>

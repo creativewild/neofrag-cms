@@ -16,6 +16,52 @@ tr.navbar-inner:before, tr.navbar-inner:after {
 	text-align: center;
 }
 
+.form-legend {
+	text-transform: uppercase;
+	font-size: 13px;
+	font-weight: 700;
+	color: #A6ACB3;
+	letter-spacing: 1px;
+	padding: 0 30px;
+	margin: 10px 0 0 0;
+}
+
+.form-group + .form-group.legend {
+	margin-top: 25px;
+}
+
+table.table td.v-align {
+	vertical-align: middle;
+}
+
+.img-flag {
+	margin-right: 5px;
+}
+
+.avatar {
+	-webkit-border-radius: 100%;
+	-moz-border-radius: 100%;
+	border-radius: 100%;
+	display: block;
+	margin: auto;
+	overflow: hidden;
+}
+
+.media .avatar {
+	height: 48px;
+	width: 48px;
+}
+
+.table .avatar {
+	height: 40px;
+	width: 40px;
+}
+
+.popover-user .avatar {
+	height: 80px;
+	width: 80px;
+}
+
 .no-wrap {
 	display: block;
 	overflow: hidden;

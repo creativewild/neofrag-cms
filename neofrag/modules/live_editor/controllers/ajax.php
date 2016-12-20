@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,7 +22,7 @@ class m_live_editor_c_ajax extends Controller_Module
 {
 	public function zone_fork($disposition_id, $disposition, $url, $theme, $page, $zone)
 	{
-		$url = str_replace($this->config->base_url, '', $url);
+		$url = str_replace(url(), '', $url);
 		
 		if (!$url || preg_match('#^index(?:\.|/)#', $url))
 		{
@@ -35,10 +35,20 @@ class m_live_editor_c_ajax extends Controller_Module
 		}
 		
 		$url = explode('/', $url);
-		
-		if (!empty($url[0]) && ($module = $this->load->module($url[0])) && !empty($module->routes) && ($method = $module->get_method(array_slice($url, 1, -1), TRUE)))
+
+		if (!empty($url[0]))
 		{
-			$url = array($url[0], $method, '*');
+			if ($module = $this->load->module($url[0]))
+			{
+				if (!empty($module->routes) && ($method = $module->get_method(array_slice($url, 1, -1), TRUE)))
+				{
+					$url = [$url[0], $method, '*'];
+				}
+			}
+			else if ($module = $this->load->module('pages'))
+			{
+				$url = ['pages', '_index', $url[0], '*'];
+			}
 		}
 		
 		$url = implode('/', $url);
@@ -51,27 +61,20 @@ class m_live_editor_c_ajax extends Controller_Module
 				{
 					foreach ($col->widgets as &$w)
 					{
-						$widget = $this->db	->select('widget', 'type', 'title', 'settings')
-											->from('nf_widgets')
-											->where('widget_id', $w->widget_id)
-											->row();
-						
-						$w->widget_id = $this->db->insert('nf_widgets', array(
-							'widget'   => $widget['widget'],
-							'type'     => $widget['type'],
-							'title'    => $widget['title'],
-							'settings' => $widget['settings']
-						));
+						$w->widget_id = $this->db->insert('nf_widgets', $this->db	->select('widget', 'type', 'title', 'settings')
+																					->from('nf_widgets')
+																					->where('widget_id', $w->widget_id)
+																					->row());
 					}
 				}
 			}
 			
-			return Zone::display($this->db->insert('nf_dispositions', array(
+			return Zone::display($this->db->insert('nf_dispositions', [
 				'theme'       => $theme,
 				'page'        => $url,
 				'zone'        => $zone,
 				'disposition' => serialize($disposition)
-			)), $disposition, $url, $zone, TRUE);
+			]), $disposition, $url, $zone, TRUE);
 		}
 		else
 		{
@@ -103,7 +106,7 @@ class m_live_editor_c_ajax extends Controller_Module
 	{
 		$row = $disposition[$row_id];
 		unset($disposition[$row_id]);
-		$this->model()->set_disposition($disposition_id, array_slice($disposition, 0, $position, TRUE) + array($row_id => $row) + array_slice($disposition, $position, NULL, TRUE));
+		$this->model()->set_disposition($disposition_id, array_slice($disposition, 0, $position, TRUE) + [$row_id => $row] + array_slice($disposition, $position, NULL, TRUE));
 	}
 	
 	public function row_style($disposition_id, $disposition, $row_id, $style)
@@ -131,7 +134,7 @@ class m_live_editor_c_ajax extends Controller_Module
 	{
 		$col = $disposition[$row_id]->cols[$col_id];
 		unset($disposition[$row_id]->cols[$col_id]);
-		$disposition[$row_id]->cols = array_slice($disposition[$row_id]->cols, 0, $position, TRUE) + array($col_id => $col) + array_slice($disposition[$row_id]->cols, $position, NULL, TRUE);
+		$disposition[$row_id]->cols = array_slice($disposition[$row_id]->cols, 0, $position, TRUE) + [$col_id => $col] + array_slice($disposition[$row_id]->cols, $position, NULL, TRUE);
 		$this->model()->set_disposition($disposition_id, $disposition);
 	}
 	
@@ -150,16 +153,16 @@ class m_live_editor_c_ajax extends Controller_Module
 	
 	public function widget_add($disposition_id, $disposition, $row_id, $col_id, $title, $widget_name, $type, $settings)
 	{
-		$widget_id = $this->db	->insert('nf_widgets', array(
+		$widget_id = $this->db	->insert('nf_widgets', [
 									'title'    => $title ? utf8_htmlentities($title) : NULL,
 									'widget'   => $widget_name,
 									'type'     => $type,
 									'settings' => $this->load->widget($widget_name)->get_settings($type, $settings)
-								));
+								]);
 		
-		$widget = $disposition[$row_id]->cols[$col_id]->widgets[] = new Widget_View(array(
+		$widget = $disposition[$row_id]->cols[$col_id]->widgets[] = new Widget_View([
 			'widget_id' => $widget_id
-		));
+		]);
 		
 		$this->model()->set_disposition($disposition_id, $disposition);
 		
@@ -170,7 +173,7 @@ class m_live_editor_c_ajax extends Controller_Module
 	{
 		$widget = $disposition[$row_id]->cols[$col_id]->widgets[$widget_id];
 		unset($disposition[$row_id]->cols[$col_id]->widgets[$widget_id]);
-		$disposition[$row_id]->cols[$col_id]->widgets = array_slice($disposition[$row_id]->cols[$col_id]->widgets, 0, $position, TRUE) + array($widget_id => $widget) + array_slice($disposition[$row_id]->cols[$col_id]->widgets, $position, NULL, TRUE);
+		$disposition[$row_id]->cols[$col_id]->widgets = array_slice($disposition[$row_id]->cols[$col_id]->widgets, 0, $position, TRUE) + [$widget_id => $widget] + array_slice($disposition[$row_id]->cols[$col_id]->widgets, $position, NULL, TRUE);
 		$this->model()->set_disposition($disposition_id, $disposition);
 	}
 	
@@ -188,15 +191,15 @@ class m_live_editor_c_ajax extends Controller_Module
 	public function widget_settings($widget_id = 0, $widget = '', $type = 'index', $title = '', $settings = '')
 	{
 		$this->model()->get_widgets($widgets, $types);
-		
-		return $this->load->view('widget', array(
+
+		return $this->load->view('widget', [
 			'widget_id' => $widget_id,
 			'title'     => $title,
-			'widget'    => $widget,
+			'widget'    => $widget ?: array_keys($widgets)[0],
 			'widgets'   => $widgets,
 			'type'      => $type,
 			'types'     => $types
-		));
+		]);
 	}
 	
 	public function widget_update($disposition_id, $disposition, $row_id, $col_id, $widget_id, $id, $widget, $type, $title, $settings)
@@ -204,12 +207,12 @@ class m_live_editor_c_ajax extends Controller_Module
 		$settings = $this->load->widget($widget)->get_settings($type, $settings);
 		
 		$this->db	->where('widget_id', $id)
-					->update('nf_widgets', array(
+					->update('nf_widgets', [
 						'title'    => $title ? utf8_htmlentities($title) : NULL,
 						'widget'   => $widget,
 						'type'     => $type,
 						'settings' => $settings,
-					));
+					]);
 
 		return $disposition[$row_id]->cols[$col_id]->widgets[$widget_id]->display($widget_id);
 	}
@@ -223,6 +226,6 @@ class m_live_editor_c_ajax extends Controller_Module
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./neofrag/modules/live_editor/controllers/ajax.php
 */

@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,189 +20,223 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class Driver_mysql extends Driver
 {
-	public function connect($hostname, $username, $password, $database)
-	{
-		$this->_connect_id = @mysql_connect($hostname, $username, $password);
+	static private $_database;
+	static private $_time_zone;
 
-		if ($this->_connect_id !== FALSE && mysql_select_db($database, $this->_connect_id))
+	static public function connect($hostname, $username, $password, $database)
+	{
+		if (function_exists('mysqli_connect'))
 		{
-			mysql_query('SET NAMES UTF8');
+			return 'mysqli';
+		}
+
+		self::$db = @mysql_connect($hostname, $username, $password);
+
+		if (self::$db !== FALSE && mysql_select_db($database, self::$db))
+		{
+			self::$_database = $database;
+
+			mysql_set_charset('UTF8');
+
+			mysql_query('SET time_zone = "+00:00"');
+			mysql_query('SET time_zone = "'.(self::$_time_zone = date_create(mysql_fetch_row(mysql_query('SELECT NOW()'))[0])->diff(date_create())->format('%R%H:%I')).'"');
 
 			return TRUE;
 		}
+	}
+
+	static public function get_info()
+	{
+		$server  = 'MySQL';
+		$version = mysql_get_server_info();
+
+		if (preg_match('/-([0-9.]+?)-(MariaDB)/', $version, $match))
+		{
+			list(, $version, $server) = $match;
+		}
 		else
 		{
-			return FALSE;
+			$version = preg_replace('/-.*$/', '', $version);
 		}
+
+		return [
+			'name'      => self::$_database,
+			'time_zone' => self::$_time_zone,
+			'server'    => $server,
+			'version'   => $version,
+			'innodb'    => ($result = mysql_fetch_row(mysql_query('SELECT SUPPORT FROM INFORMATION_SCHEMA.ENGINES WHERE ENGINE = "InnoDB"'))) && in_array($result[0], array('DEFAULT', 'YES'))
+		];
 	}
 	
-	public function get_server_info()
+	static public function get_size()
 	{
-		return 'MySQL '.mysql_get_server_info();
+		$total = 0;
+
+		$sql = mysql_query('SHOW TABLE STATUS LIKE "nf\_%"');
+		while ($table = mysql_fetch_object($sql))
+		{
+			$total += $table->Data_length + $table->Index_length;
+		}
+
+		return $total;
+	}
+
+	static public function escape_string($string)
+	{
+		return mysql_real_escape_string($string);
+	}
+
+	static public function check_foreign_keys($check)
+	{
+		return mysql_query('SET FOREIGN_KEY_CHECKS = '.(int)$check);
 	}
 	
-	public function set_time_zone($time_zone)
+	static public function fetch($results, $type = 'assoc')
 	{
-		return mysql_query('SET time_zone = \''.$time_zone.'\'');
+		return mysql_fetch_assoc($results);
 	}
 
-	public function builder($request)
+	static public function free($results)
 	{
-		if (isset($request['query']))
-		{
-			return $request['query'];
-		}
-		else if (isset($request['from']))
-		{
-			return 'SELECT '.(!empty($request['select']) && is_array($request['select']) ? trim_word(implode(', ', array_map(array(&$this, 'escape_keyword'), $request['select'])), ', ') : '*').' FROM '.$request['from'].((isset($request['join'])) ? ' '.$request['join'] : '').((isset($request['where'])) ? ' WHERE '.trim_word($request['where'], ' AND ', ' OR ') : '').((isset($request['group_by'])) ? ' GROUP BY '.trim_word(implode(', ', $request['group_by']), ', ') : '').((isset($request['order_by'])) ? ' ORDER BY '.trim_word(implode(', ', array_map(array(&$this, 'escape_keyword'), $request['order_by'])), ', ') : '').((isset($request['limit'])) ? ' LIMIT '.$request['limit'] : '');
-		}
-		else if (isset($request['insert'], $request['values']))
-		{
-			$keys = '';
-			foreach (array_keys($request['values']) as $key)
-			{
-				$keys .= $this->escape_keyword($key).', ';
-			}
-
-			$values = '';
-			foreach ($request['values'] as $value)
-			{
-				$values .= $this->escape_string($value).', ';
-			}
-
-			return 'INSERT INTO '.$request['insert'].' ('.trim_word($keys, ', ').') VALUES ('.trim_word($values, ', ').')';
-		}
-		else if (isset($request['update'], $request['set']))
-		{
-			if (is_array($request['set']))
-			{
-				$sets = '';
-				foreach ($request['set'] as $key => $value)
-				{
-					$sets .= $this->escape_keyword($key).' = '.$this->escape_string($value).', ';
-				}
-			}
-			else
-			{
-				$sets = $request['set'];
-			}
-
-			return 'UPDATE '.$request['update'].' SET '.trim_word($sets, ', ').((isset($request['where'])) ? ' WHERE '.trim_word($request['where'], ' AND ', ' OR ') : '');
-		}
-		else if (isset($request['delete']))
-		{
-			$query = 'DELETE ';
-			
-			if (isset($request['multi_tables']))
-			{
-				$query .= $request['delete'].' FROM '.$request['multi_tables'];
-			}
-			else
-			{
-				$query .= 'FROM '.$request['delete'];
-			}
-			
-			return $query.((isset($request['where'])) ? ' WHERE '.trim_word($request['where'], ' AND ', ' OR ') : '');
-		}
-
-		return '';
+		mysql_free_result($results);
 	}
 
-	public function query($request)
+	static public function lock($tables)
 	{
-		$start    = microtime(TRUE);
-		
-		$resource = mysql_query($request);
-		
-		$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
-
-		$this->_db->requests[] = array($request, microtime(TRUE) - $start, mysql_error(), (!is_bool($resource) && !empty($resource)) ? mysql_num_rows($resource) : 0, relative_path($backtrace[2]['file']), $backtrace[2]['line']);
-
-		return $resource;
-	}
-	
-	public function free_result($result)
-	{
-		return mysql_free_result($result);
+		mysql_query('LOCK TABLES '.implode(', ', array_map(function($a){
+			return '`'.$a.'` READ';
+		}, $tables)));
 	}
 
-	public function get($request)
+	static public function unlock($tables)
 	{
-		$result = array();
-		
-		if (is_resource($request))
+		mysql_query('UNLOCK TABLES');
+	}
+
+	static public function tables()
+	{
+		$tables = [];
+
+		$sql = mysql_query('SHOW TABLE STATUS LIKE "nf\_%"');
+		while ($table = mysql_fetch_object($sql))
 		{
-			while ($data = mysql_fetch_array($request, MYSQL_ASSOC))
-			{
-				$result[] = $data;
-			}
+			$tables[] = $table->Name;
+		}
+
+		return $tables;
+	}
+
+	static public function table_create($table)
+	{
+		$result = '';
+
+		$sql = mysql_query('SHOW CREATE TABLE `'.$table.'`');
+		if ($row = mysql_fetch_object($sql))
+		{
+			$result = $row->{'Create Table'};
 		}
 
 		return $result;
 	}
 
-	public function row($request)
+	static public function table_columns($table)
 	{
-		if (!is_resource($request))
+		$columns = [];
+
+		$sql = mysql_query('SHOW COLUMNS FROM `'.$table.'`');
+		while ($column = mysql_fetch_object($sql))
 		{
-			return array();
+			$columns[$column->Field] = $column->Type;
+		}
+
+		return $columns;
+	}
+
+	protected function execute()
+	{
+		if (!$this->result = mysql_query($this->sql))
+		{
+			$this->error = mysql_error();
+		}
+	}
+
+	protected function build_sql()
+	{
+		parent::build_sql();
+		
+		if (!empty($this->bind))
+		{
+			$this->sql = vsprintf($this->sql, $this->bind);
 		}
 		
-		$result = mysql_fetch_array($request, MYSQL_ASSOC);
+		return $this;
+	}
+
+	protected function bind($value)
+	{
+		$return = '%d';
+
+		if ($value === NULL)
+		{
+			$return = '%s';
+			$value  = 'NULL';
+		}
+		else if (is_bool($value))
+		{
+			$return = '%s';
+			$value  = '"'.(int)$value.'"';
+		}
+		else if (!is_integer($value))
+		{
+			$return = '%s';
+			$value  = '"'.mysql_real_escape_string($value).'"';
+		}
+
+		$this->bind[] = $value;
+
+		return $return;
+	}
+
+	public function get()
+	{
+		$return = [];
 		
-		return $result ?: array();
+		while ($data = mysql_fetch_array($this->result, MYSQL_ASSOC))
+		{
+			$return[] = $data;
+		}
+		
+		mysql_free_result($this->result);
+
+		return $return;
 	}
 
-	public function escape_string($string)
+	public function row()
 	{
-		if (is_bool($string))
-		{
-			return '\''.intval($string).'\'';
-		}
-		else if ($string === NULL)
-		{
-			return 'NULL';
-		}
-		else if (!is_integer($string))
-		{
-			return '\''.mysql_real_escape_string($string).'\'';
-		}
+		$return = mysql_fetch_array($this->result, MYSQL_ASSOC);
 
-		return $string;
+		mysql_free_result($this->result);
+
+		return $return;
 	}
 
-	public function escape_keyword($string)
+	public function results()
 	{
-		if (in_array(strtolower($string), array('order')))
-		{
-			return '`'.$string.'`';
-		}
-		else
-		{
-			return $string;
-		}
+		return $this->result;
 	}
 
-	public function get_last_id()
+	public function last_id()
 	{
-		return mysql_insert_id($this->_connect_id);
+		return mysql_insert_id(self::$db);
 	}
 
 	public function affected_rows()
 	{
 		return mysql_affected_rows();
 	}
-		
-	public function check_foreign_keys($check)
-	{
-		mysql_query('SET FOREIGN_KEY_CHECKS='.(int)$check.';');
-		
-		return $this;
-	}
-
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./neofrag/databases/mysql.php
 */

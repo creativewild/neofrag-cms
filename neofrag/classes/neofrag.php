@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -23,144 +23,164 @@ abstract class NeoFrag
 	const UNFOUND      = 0;
 	const UNAUTHORIZED = 1;
 	const UNCONNECTED  = 2;
-	const DATABASE     = 3;
-	
-	const ZONES        = 1;
-	const ROWS         = 2;
-	const COLS         = 4;
-	const WIDGETS      = 8;
 
-	public $id;
-	public $load;
-	public $path;
-	
+	const LIVE_EDITOR  = 1;
+	const ZONES        = 2;
+	const ROWS         = 4;
+	const COLS         = 8;
+	const WIDGETS      = 16;
+
+	static public $route_patterns = [
+		'id'         => '([0-9]+?)',
+		'key_id'     => '([a-z0-9]+?)',
+		'url_title'  => '([a-z0-9-]+?)',
+		'url_title*' => '([a-z0-9-/]+?)',
+		'page'       => '((?:/?page/[0-9]+?)?)',
+		'pages'      => '((?:/?(?:all|page/[0-9]+?(?:/(?:10|25|50|100))?))?)'
+	];
+
 	static public function loader()
 	{
-		global $NeoFrag;
-		return $NeoFrag;
+		static $NF;
+		
+		if ($NF === NULL)
+		{
+			global $NeoFrag;
+			$NF = $NeoFrag;
+		}
+		
+		return $NF;
 	}
 	
 	static public function live_editor()
 	{
-		global $NeoFrag;
-		
-		if (!is_null($live_editor = post('live_editor')) && $NeoFrag->user('admin'))
+		if (($live_editor = post('live_editor')) && NeoFrag::loader()->user('admin'))
 		{
-			$NeoFrag->session->set('live_editor', $live_editor);
+			NeoFrag::loader()->session->set('live_editor', $live_editor);
 			return $live_editor;
 		}
 		
 		return FALSE;
 	}
 
-	static public function get_last($class)
-	{
-		foreach (debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS) as $call)
-		{
-			if (isset($call['object']) && is_a($call['object'], $class))
-			{
-				return $call['object'];
-			}
-		}
-
-		return NULL;
-	}
-
-	static public function get_loader()
-	{
-		return NeoFrag::get_last('Loader');
-	}
-
-	static public function get_module()
-	{
-		return NeoFrag::get_last('Module');
-	}
-
-	public function __construct()
-	{
-		//On ajoute le chemin
-		$this->set_path();
-
-		//On ajoute une référence vers le loader courant
-		$this->load = NeoFrag::get_loader();
-
-		if (is_a($this, 'Library'))
-		{
-			$name = !empty($this->name) ? $this->name : cc2u(get_class($this));
-			
-			array_unshift($this->load->paths['views'], './overrides/views/'.$name, './neofrag/views/'.$name);
-		
-			//On ajoute la librairie nouvellement chargée aux librairies déjà chargées
-			$this->load->libraries[$name] =& $this;
-		}
-	}
-
-	public function __wakeup()
-	{
-		$this->load = new Loader(array(), NeoFrag::loader());
-	}
-
 	public function __isset($name)
 	{
-		return !is_null($this->load->get_library($name));
+		$loader = is_a($this, 'Loader') ? $this : $this->load;
+		return isset($loader->libraries[$name]) || isset(NeoFrag::loader()->libraries[$name]);
 	}
 
 	public function __get($name)
 	{
-		if (is_null($library = $this->load->get_library($name)))
-		{
-			$this->error('Undefined property: '.get_class($this).'::$'.$name);
-		}
+		$loader = is_a($this, 'Loader') ? $this : $this->load;
 
-		return $library;
+		if (isset($loader->libraries[$name]))
+		{
+			return $loader->libraries[$name];
+		}
+		else if (isset(NeoFrag::loader()->libraries[$name]))
+		{
+			return NeoFrag::loader()->libraries[$name];
+		}
+		else
+		{
+			$type = 'libraries';
+			
+			if (preg_match('/^core_(.+)/', $name, $match))
+			{
+				$name = $match[1];
+				$type = 'core';
+			}
+			
+			foreach ($loader->paths[$type] as $dir)
+			{
+				if (!check_file($path = $dir.'/'.$name.'.php'))
+				{
+					continue;
+				}
+
+				require_once $path;
+
+				foreach ($loader->paths['config'] as $dir)
+				{
+					if (check_file($path = $dir.'/'.$name.'.php'))
+					{
+						include $path;
+					}
+				}
+
+				$class = u2ucc($name);
+
+				if (isset($$name))
+				{
+					$library = load($class, $$name);
+				}
+				else
+				{
+					$library = load($class);
+				}
+
+				if (!isset($library->load))
+				{
+					$library->load = $loader;
+				}
+
+				array_unshift($loader->paths['views'], 'overrides/views/'.$name, 'neofrag/views/'.$name);
+
+				return $loader->libraries[$library->name = $name] = $library->set_id();
+			}
+		}
 	}
 
 	public function __call($name, $args)
 	{
-		$library = $this->load->get_library($name);
-
-		if (!is_null($library) && is_callable($library))
+		if (is_callable($library = $this->$name ?: NeoFrag::loader()->$name))
 		{
 			return call_user_func_array($library, $args);
 		}
-		else
-		{
-			$this->error('Call to undefined method '.get_class($this).'::$'.$name);
-			return NULL;
-		}
-	}
-
-	protected function set_path()
-	{
-		if (!$this->path)
-		{
-			$this->path = relative_path(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['file']);
-		}
-		
-		return $this;
 	}
 
 	public function ajax()
 	{
-		$this->config->ajax_url = TRUE;
+		$this->config->ajax_allowed = TRUE;
+		return $this;
+	}
+
+	public function extension($extension)
+	{
+		if (in_array($extension, ['json', 'xml', 'txt']))
+		{
+			if ($this->config->extension_url != $extension)
+			{
+				throw new Exception(NeoFrag::UNFOUND);
+			}
+
+			$this->config->extension_url     = $extension;
+			$this->config->extension_allowed = TRUE;
+
+			$this->ajax();
+		}
+
 		return $this;
 	}
 
 	public function add_data($data, $content)
 	{
-		$this->load->data[$data] = $content;
+		$loader = is_a($this, 'Loader') ? $this : $this->load;
+		$loader->data[$data] = $content;
 		return $this;
 	}
 
 	public function css($file, $media = 'screen')
 	{
-		NeoFrag::loader()->css[] = array($file, $media, $this->load);
+		$loader = is_a($this, 'Loader') ? $this : $this->load;
+		NeoFrag::loader()->css[] = [$file, $media, $loader->paths];
 		return $this;
 	}
 
 	public function js($file)
 	{
-		NeoFrag::loader()->js[] = array($file, $this->load);
+		$loader = is_a($this, 'Loader') ? $this : $this->load;
+		NeoFrag::loader()->js[] = [$file, $loader->paths];
 		return $this;
 	}
 
@@ -169,58 +189,33 @@ abstract class NeoFrag
 		NeoFrag::loader()->js_load[] = $function;
 		return $this;
 	}
-	
-	public function set_id($id)
-	{
-		$this->id = preg_match('/[a-f0-9]{32}/', $id) ? $id : md5($id);
-		return $this;
-	}
 
-	public function get_modules($get_all = FALSE)
+	public function debug($class, $title = NULL, $loader = FALSE)
 	{
-		$list = array();
-		
-		foreach ($this->addons('module') as $module => $enable)
+		if ($title === NUll)
 		{
-			$module_instance = NeoFrag::loader()->init_module($module);
-
-			if (!is_null($module_instance) && ($enable || !$module_instance->deactivatable || $get_all) && $this->user->is_allowed($module))
-			{
-				$list[] = $module_instance;
-			}
-			else
-			{
-				unset($module_instance);
-			}
+			$title = get_class($this);
+		}
+		
+		if (!empty($this->override))
+		{
+			$title .= ' '.icon('fa-code-fork');
 		}
 
-		return $list;
-	}
-	
-	static public function unset_module()
-	{
-		unset(NeoFrag::loader()->module);
-		NeoFrag::loader()->config->extension_url = 'html';
-		NeoFrag::loader()->module = NULL;
-	}
-
-	public function is_core()
-	{
-		return strpos($this->path, './neofrag/') === 0;
-	}
-	
-	public function reset()
-	{
-		$this->css     = array();
-		$this->js      = array();
-		$this->js_load = array();
-		$this->module  = NULL;
+		$output = '<span class="label label-'.$class.'" data-toggle="tooltip" data-html="true" title="'.utf8_htmlentities(icon('fa-clock-o').' '.round(($this->time[1] - $this->time[0]) * 1000, 2).' ms&nbsp;&nbsp;&nbsp;'.icon('fa-cogs').' '.ceil(($this->memory[1] - $this->memory[0]) / 1024).' kB').'">'.$title.'</span>';
 		
-		return $this;
+		NeoFrag::loader()->debug->timeline($output, $this->time[0], $this->time[1]);
+	
+		if ($loader && isset($this->load))
+		{
+			$output .= $this->load->debugbar();
+		}
+	
+		return $output;
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/classes/neofrag.php
 */

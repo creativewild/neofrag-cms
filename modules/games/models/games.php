@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -27,7 +27,7 @@ class m_games_m_games extends Model
 			$lang = $this->config->lang;
 		}
 		
-		return $this->db->select('g.game_id', 'g.parent_id', 'g.image_id', 'g.icon_id', 'gl.title')
+		return $this->db->select('g.game_id', 'g.parent_id', 'g.image_id', 'g.icon_id', 'gl.title', 'g.name')
 						->from('nf_games g')
 						->join('nf_games_lang gl', 'g.game_id = gl.game_id')
 						->where('g.game_id', $game_id)
@@ -48,59 +48,68 @@ class m_games_m_games extends Model
 						->get();
 	}
 	
-	public function get_games_list($game_id = NULL)
+	public function get_games_list($all = FALSE, $game_id = NULL)
 	{
-		$list = array();
+		$list = [];
 
 		foreach ($this->get_games() as $game)
 		{
-			if (empty($game['parent_id']) && (!$game_id || $game_id != $game['game_id']))
+			if ($game_id == $game['game_id'] || ($game_id && $game_id == $game['parent_id']))
+			{
+				continue;
+			}
+			
+			if (empty($game['parent_id']))
 			{
 				$list[$game['game_id']] = $game['title'];
 			}
+			else if ($all)
+			{
+				$list['g'.$game['game_id']] = str_repeat('&nbsp;', 10).$game['title'];
+			}
 		}
-
-		natsort($list);
 
 		return $list;
 	}
 
 	public function add_game($title, $parent_id, $image_id, $icon_id)
 	{
-		$game_id = $this->db->insert('nf_games', array(
+		$game_id = $this->db->insert('nf_games', [
 			'name'      => url_title($title),
 			'parent_id' => $parent_id ?: NULL,
 			'image_id'  => $image_id,
 			'icon_id'   => $icon_id
-		));
+		]);
 
-		$this->db->insert('nf_games_lang', array(
+		$this->db->insert('nf_games_lang', [
 			'game_id'   => $game_id,
 			'lang'      => $this->config->lang,
 			'title'     => $title
-		));
+		]);
+		
+		return $game_id;
 	}
 
 	public function edit_game($game_id, $title, $parent_id, $image_id, $icon_id)
 	{
 		$this->db	->where('game_id', $game_id)
-					->update('nf_games', array(
+					->update('nf_games', [
 						'parent_id' => $parent_id ?: NULL,
 						'image_id'  => $image_id,
 						'icon_id'   => $icon_id,
 						'name'      => url_title($title)
-					));
+					]);
 
 		$this->db	->where('game_id', $game_id)
 					->where('lang', $this->config->lang)
-					->update('nf_games_lang', array(
+					->update('nf_games_lang', [
 						'title'     => $title
-					));
+					]);
 	}
 
 	public function delete_game($game_id)
 	{
-		$files = array();
+		$files = [];
 		
 		foreach ($this->db->select('image_id', 'icon_id')->from('nf_games')->where('parent_id', $game_id)->get() as $game)
 		{
@@ -108,10 +117,15 @@ class m_games_m_games extends Model
 			$files[] = $game['icon_id'];
 		}
 		
-		$this->load->library('file')->delete(array_merge(
+		$this->file->delete(array_merge(
 			array_values($this->db->select('image_id', 'icon_id')->from('nf_games')->where('game_id', $game_id)->row()),
 			array_filter($files)
 		));
+		
+		foreach ($this->db->select('team_id')->from('nf_teams')->where('game_id', $game_id)->get() as $team_id)
+		{
+			$this->groups->delete('teams', $team_id);
+		}
 		
 		$this->db	->where('game_id', $game_id)
 					->delete('nf_games');
@@ -119,6 +133,6 @@ class m_games_m_games extends Model
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./modules/games/models/games.php
 */

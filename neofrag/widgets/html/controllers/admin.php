@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,18 +20,18 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class w_html_c_admin extends Controller_Widget
 {
-	public function index($settings = array())
+	public function index($settings = [])
 	{
 		return $this->load->view('bbcode', $settings);
 	}
 	
-	public function html($settings = array())
+	public function html($settings = [])
 	{
-		return '<textarea class="form-control" name="settings[content]" placeholder="Code HTML" rows="6">'.$settings['content'].'</textarea>';
+		return '<textarea class="form-control" name="settings[content]" placeholder="'.$this('html_code').'" rows="6">'.$settings['content'].'</textarea>';
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/widgets/html/controllers/admin.php
 */

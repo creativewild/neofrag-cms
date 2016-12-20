@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,13 +20,13 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class w_navigation_c_checker extends Controller_Widget
 {
-	public function index($settings = array())
+	public function index($settings = [])
 	{
-		$links = array();
+		$links = [];
 		
 		foreach ($settings as $key => $values)
 		{
-			if (in_array($key, array('title', 'url')))
+			if (in_array($key, ['title', 'url', 'target']))
 			{
 				foreach ($values as $i => $value)
 				{
@@ -35,14 +35,14 @@ class w_navigation_c_checker extends Controller_Widget
 			}
 		}
 		
-		return array(
+		return [
 			'links'   => $links,
 			'display' => (bool)$settings['display']
-		);
+		];
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/widgets/navigation/controllers/checker.php
 */

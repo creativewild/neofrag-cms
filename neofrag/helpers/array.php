@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -40,7 +40,14 @@ function array_offset_right($array, $length = 1)
 	return array_slice($array, 0, -$length);
 }
 
+function array_natsort(&$array, $data = NULL)
+{
+	uasort($array, function($a, $b) use ($data){
+		return str_nat($a, $b, $data);
+	});
+}
+
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.4.1
 ./neofrag/helpers/array.php
 */

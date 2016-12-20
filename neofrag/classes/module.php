@@ -11,285 +11,102 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-abstract class Module extends NeoFrag
+abstract class Module extends Loadable
 {
-	static public $patterns = array(
-		'id'         => '([0-9]+?)',
-		'key_id'     => '([a-z0-9]+?)',
-		'url_title'  => '([a-z0-9-]+?)',
-		'url_title*' => '([a-z0-9-/]+?)',
-		'page'       => '((?:/?page/[0-9]+?)?)',
-		'pages'      => '((?:/?(?:all|page/[0-9]+?(?:/(?:10|25|50|100))?))?)'
-	);
-	
-	private $_module_name;
+	static public $core = [
+		'access'      => FALSE,
+		'addons'      => FALSE,
+		'admin'       => FALSE,
+		'comments'    => TRUE,
+		'error'       => FALSE,
+		'live_editor' => FALSE,
+		'monitoring'  => FALSE,
+		'pages'       => TRUE,
+		'search'      => TRUE,
+		'settings'    => FALSE,
+		'user'        => FALSE
+	];
+
+	public $icon;
+	public $routes = [];
+
 	private $_output      = '';
-	private $_actions     = array();
+	private $_actions     = [];
 
-	public $name          = '';
-	public $description   = '';
-	public $icon          = '';
-	public $link          = '';
-	public $author        = '';
-	public $licence       = '';
-	public $version       = '';
-	public $nf_version    = '';
-	public $administrable = TRUE;
-	public $deactivatable = TRUE;
-	public $routes        = array();
-
-	public $controllers   = array();
-	public $segments      = array();
-
-	public function __construct($module_name)
+	public function paths()
 	{
-		$this->load = new Loader(
-			array(
-				'assets' => array(
-					'./assets',
-					'./overrides/modules/'.$module_name,
-					'./neofrag/modules/'.$module_name,
-					'./modules/'.$module_name
-				),
-				'controllers' => array(
-					'./overrides/modules/'.$module_name.'/controllers',
-					'./neofrag/modules/'.$module_name.'/controllers',
-					'./modules/'.$module_name.'/controllers'
-				),
-				'forms' => array(
-					'./overrides/modules/'.$module_name.'/forms',
-					'./neofrag/modules/'.$module_name.'/forms',
-					'./modules/'.$module_name.'/forms'
-				),
-				'helpers' => array(
-					'./overrides/modules/'.$module_name.'/helpers',
-					'./neofrag/modules/'.$module_name.'/helpers',
-					'./modules/'.$module_name.'/helpers'
-				),
-				'lang' => array(
-					'./overrides/modules/'.$module_name.'/lang',
-					'./neofrag/modules/'.$module_name.'/lang',
-					'./modules/'.$module_name.'/lang'
-				),
-				'libraries' => array(
-					'./overrides/modules/'.$module_name.'/libraries',
-					'./neofrag/modules/'.$module_name.'/libraries',
-					'./modules/'.$module_name.'/libraries'
-				),
-				'models' => array(
-					'./overrides/modules/'.$module_name.'/models',
-					'./neofrag/modules/'.$module_name.'/models',
-					'./modules/'.$module_name.'/models'
-				),
-				'views' => array(
-					'./overrides/modules/'.$module_name.'/views',
-					'./neofrag/modules/'.$module_name.'/views',
-					'./modules/'.$module_name.'/views'
-				)
-			),
-			NeoFrag::loader()
-		);
-
-		$this->_module_name = $module_name;
-
-		$this->set_path();
-	}
-
-	public function run($args = array())
-	{
-		if (!$this->user->is_allowed($this->get_name()))
-		{
-			$this->unset_module();
-
-			if ($this->user())
+		return function(){
+			if (!empty(NeoFrag::loader()->theme))
 			{
-				$this->load->module('error', 'unauthorized');
-			}
-			else
-			{
-				$this->load->module('user', 'login', NeoFrag::UNCONNECTED);
-			}
-
-			return;
-		}
-		
-		//Vérification des droits d'accés aux pages d'administration
-		if ($this->config->admin_url)
-		{
-			if ($this->user())
-			{
-				if (!$this->user('admin'))
+				if (in_array($theme_name = NeoFrag::loader()->theme->name, ['default', 'admin']))
 				{
-					$this->config->admin_url = FALSE;
-					$this->unset_module();
-					$this->load->module('error', 'unauthorized');
-					return;
-				}
-			}
-			else
-			{
-				$this->config->admin_url = FALSE;
-				$this->unset_module();
-				$this->load->module('user', 'login', NeoFrag::UNCONNECTED);
-				return;
-			}
-		}
-
-		//Méthode par défault
-		if (empty($args))
-		{
-			$method = 'index';
-		}
-		//Méthode définie par routage
-		else if (!empty($this->routes))
-		{
-			$method = $this->get_method($args);
-		}
-		
-		//Routage automatique
-		if (!isset($method))
-		{
-			if ($args[0])
-			{
-				$method = str_replace('-', '_', $args[0]);
-				$args   = array_offset_left($args);
-			}
-			else
-			{
-				$this->unset_module();
-				$this->load->module('error');
-				return;
-			}
-		}
-
-		$ajax = $this->config->ajax_url;
-		
-		//Checker Controller
-		if (!is_null($checker = $this->load->controller(($this->config->admin_url ? 'admin_' : '').($ajax ? 'ajax_' : '').'checker')) && method_exists($checker, $method))
-		{
-			try
-			{
-				$args = call_user_func_array(array($checker, $method), $args);
-
-				if (!is_array($args) && !is_null($args))
-				{
-					$this->append_output($args);
-					return;
-				}
-			}
-			catch (Exception $error)
-			{
-				$this->_checker($error->getMessage());
-				return;
-			}
-		}
-
-		if ($this->_module_name == 'error')
-		{
-			$controller_name = 'index';
-		}
-		else if ($this->config->admin_url)
-		{
-			$controller_name = $ajax ? 'admin_ajax' : 'admin';
-		}
-		else if ($ajax)
-		{
-			$controller_name = 'ajax';
-		}
-		else
-		{
-			$controller_name = 'index';
-		}
-		
-		//Controller
-		if (!is_null($controller = $this->load->controller($controller_name)))
-		{
-			try
-			{
-				$this->add_data('module_title', $this->name);
-				
-				if (($output = $controller->method($method, $args)) !== FALSE)
-				{
-					if ($this->config->admin_url && !is_null($help = $this->load->controller('admin_help')) && method_exists($help, $method))
-					{
-						NeoFrag::loader()	->css('neofrag.help')
-											->js('neofrag.help');
-
-						$this->add_data('menu_tabs', array(
-							array(
-								'title' => 'Aide',
-								'icon'  => 'icons-24/lifebuoy.png',
-								'url'   => $this->config->request_url,
-								'help'  => 'admin/help/'.$this->_module_name.'/'.$method.'.html'
-							)
-						));
-					}
-
-					$this->segments = array($this->_module_name, $method);
-					$this->append_output($output);
-					return;
-				}
-				
-				throw new Exception(NeoFrag::UNFOUND);
-			}
-			catch (Exception $error)
-			{
-				$this->_checker($error->getMessage());
-				return;
-			}
-		}
-
-		$this->unset_module();
-		$this->load->module('error');
-	}
-
-	private function _checker($error)
-	{
-		//Gestion des codes d'erreurs remontés par les Exceptions
-		if (is_numeric($error))
-		{
-			$this->unset_module();
-			
-			if ((int)$error === NeoFrag::UNFOUND)
-			{
-				$this->load->module('error');
-			}
-			else if ((int)$error === NeoFrag::UNAUTHORIZED)
-			{
-				if ($this->user())
-				{
-					$this->load->module('error', 'unauthorized');
+					unset($theme_name);
 				}
 				else
 				{
-					$this->load->module('user', 'login', NeoFrag::UNAUTHORIZED);
+					unset($this->load->update);
 				}
 			}
-			else if ((int)$error === NeoFrag::UNCONNECTED)
-			{
-				$this->load->module('user', 'login', NeoFrag::UNCONNECTED);
-			}
-			else if ((int)$error === NeoFrag::DATABASE)
-			{
-				$this->load->module('error', 'database');
-			}
-			else
-			{
-				$this->load->module('error', 'unknow');
-			}
-		}
-		//Gestion des redirections demandées par les Exceptions
-		else
-		{
-			call_user_func_array(array($this->load, 'module'), explode('/', $error));
-		}
+
+			return [
+				'assets' => [
+					'assets',
+					'overrides/modules/'.$this->name,
+					!empty($theme_name) ? 'themes/'.$theme_name.'/overrides/modules/'.$this->name : '',
+					'neofrag/modules/'.$this->name,
+					'modules/'.$this->name
+				],
+				'controllers' => [
+					'overrides/modules/'.$this->name.'/controllers',
+					!empty($theme_name) ? 'themes/'.$theme_name.'/overrides/modules/'.$this->name.'/controllers' : '',
+					'neofrag/modules/'.$this->name.'/controllers',
+					'modules/'.$this->name.'/controllers'
+				],
+				'forms' => [
+					'overrides/modules/'.$this->name.'/forms',
+					!empty($theme_name) ? 'themes/'.$theme_name.'/overrides/modules/'.$this->name.'/forms' : '',
+					'neofrag/modules/'.$this->name.'/forms',
+					'modules/'.$this->name.'/forms'
+				],
+				'helpers' => [
+					'overrides/modules/'.$this->name.'/helpers',
+					!empty($theme_name) ? 'themes/'.$theme_name.'/overrides/modules/'.$this->name.'/helpers' : '',
+					'neofrag/modules/'.$this->name.'/helpers',
+					'modules/'.$this->name.'/helpers'
+				],
+				'lang' => [
+					'overrides/modules/'.$this->name.'/lang',
+					!empty($theme_name) ? 'themes/'.$theme_name.'/overrides/modules/'.$this->name.'/lang' : '',
+					'neofrag/modules/'.$this->name.'/lang',
+					'modules/'.$this->name.'/lang'
+				],
+				'libraries' => [
+					'overrides/modules/'.$this->name.'/libraries',
+					!empty($theme_name) ? 'themes/'.$theme_name.'/overrides/modules/'.$this->name.'/libraries' : '',
+					'neofrag/modules/'.$this->name.'/libraries',
+					'modules/'.$this->name.'/libraries'
+				],
+				'models' => [
+					'overrides/modules/'.$this->name.'/models',
+					!empty($theme_name) ? 'themes/'.$theme_name.'/overrides/modules/'.$this->name.'/models' : '',
+					'neofrag/modules/'.$this->name.'/models',
+					'modules/'.$this->name.'/models'
+				],
+				'views' => [
+					'overrides/modules/'.$this->name.'/views',
+					!empty($theme_name) ? 'themes/'.$theme_name.'/overrides/modules/'.$this->name.'/views' : '',
+					'neofrag/modules/'.$this->name.'/views',
+					'modules/'.$this->name.'/views'
+				]
+			];
+		};
 	}
 
 	public function append_output($output)
@@ -306,17 +123,12 @@ abstract class Module extends NeoFrag
 
 	public function get_output()
 	{
-		if (!is_string($this->_output))
-		{
-			$this->_output = display($this->_output);
-		}
-		
-		return $this->_output;
+		return ob_get_clean().($this->config->extension_url == 'json' ? (is_string($this->_output) ? $this->_output : json_encode($this->_output)) : display($this->_output));
 	}
 
 	public function add_action($url, $title, $icon = '')
 	{
-		$this->_actions[] = array($url, $title, $icon);
+		$this->_actions[] = [$url, $title, $icon];
 	}
 
 	public function get_actions()
@@ -324,11 +136,6 @@ abstract class Module extends NeoFrag
 		return $this->_actions;
 	}
 
-	public function get_name()
-	{
-		return $this->_module_name;
-	}
-	
 	public function get_method(&$args, $ignore_ajax = FALSE)
 	{
 		$url = '';
@@ -364,15 +171,15 @@ abstract class Module extends NeoFrag
 
 		foreach ($this->routes as $route => $function)
 		{
-			if (preg_match('#^'.str_replace(array_map(function($a){ return '{'.$a.'}'; }, array_keys(self::$patterns)) + array('#'), array_values(self::$patterns) + array('\#'), $route).'$#', $url, $matches))
+			if (preg_match('#^'.str_replace(array_map(function($a){ return '{'.$a.'}'; }, array_keys(self::$route_patterns)) + ['#'], array_values(self::$route_patterns) + ['\#'], $route).'$#', $url, $matches))
 			{
-				$args = array();
+				$args = [];
 				
 				if (in_string('{url_title*}', $route))
 				{
 					foreach (array_offset_left($matches) as $arg)
 					{
-						$args = array_merge($args, explode('/', $arg));
+						$args = array_merge($args, explode('/', trim($arg, '/')));
 					}
 				}
 				else
@@ -389,9 +196,75 @@ abstract class Module extends NeoFrag
 		
 		return $method;
 	}
+	
+	public function get_permissions($type = NULL)
+	{
+		if (method_exists($this, 'permissions'))
+		{
+			$permissions = $this::permissions();
+			
+			if ($type === NULL)
+			{
+				return $permissions;
+			}
+			else if (isset($permissions[$type]))
+			{
+				return $permissions[$type];
+			}
+		}
+
+		return [];
+	}
+
+	public function model($model = '')
+	{
+		return $this->load->model($model ?: $this->name);
+	}
+	
+	public function is_administrable()
+	{
+		return ($controller = $this->load->controller('admin')) && (!isset($controller->administrable) || $controller->administrable);
+	}
+
+	public function is_authorized()
+	{
+		static $allowed;
+		
+		if ($allowed === NULL)
+		{
+			$allowed = FALSE;
+			
+			if ($controller = $this->load->controller('admin'))
+			{
+				if ($this->user('admin'))
+				{
+					$allowed = TRUE;
+				}
+				else if (isset($this->groups($this->user('user_id'))[1]))
+				{
+					if ($all_permissions = $this->get_permissions('default'))
+					{
+						foreach ($all_permissions['access'] as $a)
+						{
+							foreach ($a['access'] as $action => $access)
+							{
+								if (!empty($access['admin']) && $this->access($this->name, $action))
+								{
+									$allowed = TRUE;
+									break 2;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return $allowed;
+	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./neofrag/classes/module.php
 */

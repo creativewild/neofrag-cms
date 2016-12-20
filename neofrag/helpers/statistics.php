@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,7 +22,7 @@ function statistics($name, $value = NULL, $callback = NULL)
 {
 	static $statistics;
 	
-	if (is_null($statistics))
+	if ($statistics === NULL)
 	{
 		foreach (NeoFrag::loader()->db->from('nf_statistics')->get() as $stat)
 		{
@@ -34,20 +34,20 @@ function statistics($name, $value = NULL, $callback = NULL)
 	{
 		if (isset($statistics[$name]))
 		{
-			if (is_null($callback) || call_user_func($callback, $value, $statistics[$name]))
+			if ($callback === NULL || call_user_func($callback, $value, $statistics[$name]))
 			{
 				NeoFrag::loader()->db	->where('name', $name)
-										->update('nf_statistics', array(
+										->update('nf_statistics', [
 											'value' => $value
-										));
+										]);
 			}
 		}
 		else
 		{
-			NeoFrag::loader()->db->insert('nf_statistics', array(
+			NeoFrag::loader()->db->insert('nf_statistics', [
 				'name'  => $name,
 				'value' => $value
-			));
+			]);
 		}
 	}
 	else
@@ -57,6 +57,6 @@ function statistics($name, $value = NULL, $callback = NULL)
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/helpers/statistics.php
 */

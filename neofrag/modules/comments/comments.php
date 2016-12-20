@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,7 +20,7 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class m_comments extends Module
 {
-	public $name        = 'Commentaires';
+	public $title       = '{lang comments}';
 	public $description = '';
 	public $icon        = 'fa-comments-o';
 	public $link        = 'http://www.neofrag.com';
@@ -29,12 +29,12 @@ class m_comments extends Module
 	public $version     = 'Alpha 0.1';
 	public $nf_version  = 'Alpha 0.1';
 	public $path        = __FILE__;
-	public $routes      = array(
-		'admin/{url_title*}{pages}' => 'index'
-	);
+	public $routes      = [
+		'admin/([a-z0-9-]*?){pages}' => 'index'
+	];
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./neofrag/modules/comments/comments.php
 */

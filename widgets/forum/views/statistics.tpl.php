@@ -1,6 +1,6 @@
 <ul class="list-group">
-	<li class="list-group-item"><i class="fa fa-clipboard"></i> <b>{topics}</b> <?php echo $data['topics'] > 1 ? 'sujets créés' : 'sujet créé'; ?></li>
-	<li class="list-group-item"><i class="fa fa-comments-o"></i> <b>{messages}</b> <?php echo $data['messages'] > 1 ? 'messages postés' : 'message posté'; ?></li>
-	<li class="list-group-item"><i class="fa fa-flag"></i> <b>{announces}</b> <?php echo $data['announces'] > 1 ? 'annonces' : 'annonce'; ?></li>
-	<li class="list-group-item"><i class="fa fa-users"></i> <b>{users}</b> <?php echo $data['users'] > 1 ? 'participants' : 'participant'; ?></li>
+	<li class="list-group-item"><?php echo icon('fa-clipboard').' '.i18n('forum_topics', $data['topics'], $data['topics']); ?></li>
+	<li class="list-group-item"><?php echo icon('fa-comments-o').' '.i18n('forum_messages', $data['messages'], $data['messages']); ?></li>
+	<li class="list-group-item"><?php echo icon('fa-flag').' '.i18n('forum_announces', $data['announces'], $data['announces']); ?></li>
+	<li class="list-group-item"><?php echo icon('fa-users').' '.i18n('contributors', $data['users'], $data['users']); ?></li>
 </ul>

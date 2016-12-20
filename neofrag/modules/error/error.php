@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,7 +20,7 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class m_error extends Module
 {
-	public $name          = 'Erreur';
+	public $title         = '{lang error}';
 	public $description   = '';
 	public $icon          = 'fa-exclamation-triangle';
 	public $link          = 'http://www.neofrag.com';
@@ -28,19 +28,15 @@ class m_error extends Module
 	public $licence       = 'http://www.neofrag.com/license.html LGPLv3';
 	public $version       = 'Alpha 0.1';
 	public $nf_version    = 'Alpha 0.1';
-	public $administrable = FALSE;
-	public $deactivatable = FALSE;
 	public $path          = __FILE__;
-
+	
 	public function load()
 	{
-		//TODO Wtf
-		/*NeoFrag::loader()->reset();
-		$this->router->reset();*/
+		$this->config->extension_url = 'html';
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.4
 ./neofrag/modules/error/error.php
 */

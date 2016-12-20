@@ -24,22 +24,120 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `nf_access`
+--
+
+DROP TABLE IF EXISTS `nf_access`;
+CREATE TABLE IF NOT EXISTS `nf_access` (
+  `access_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` int(11) UNSIGNED NOT NULL,
+  `module` varchar(100) NOT NULL,
+  `action` varchar(100) NOT NULL,
+  PRIMARY KEY (`access_id`),
+  UNIQUE KEY `module_id` (`id`,`module`,`action`),
+  KEY `module` (`module`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+--
+-- Contenu de la table `nf_access`
+--
+
+INSERT INTO `nf_access` VALUES(1, 2, 'talks', 'read');
+INSERT INTO `nf_access` VALUES(2, 2, 'talks', 'write');
+INSERT INTO `nf_access` VALUES(3, 2, 'talks', 'delete');
+INSERT INTO `nf_access` VALUES(4, 1, 'forum', 'category_read');
+INSERT INTO `nf_access` VALUES(5, 1, 'forum', 'category_write');
+INSERT INTO `nf_access` VALUES(6, 1, 'forum', 'category_modify');
+INSERT INTO `nf_access` VALUES(7, 1, 'forum', 'category_delete');
+INSERT INTO `nf_access` VALUES(8, 1, 'forum', 'category_announce');
+INSERT INTO `nf_access` VALUES(9, 1, 'forum', 'category_lock');
+INSERT INTO `nf_access` VALUES(10, 1, 'forum', 'category_move');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `nf_access_details`
+--
+
+DROP TABLE IF EXISTS `nf_access_details`;
+CREATE TABLE IF NOT EXISTS `nf_access_details` (
+  `access_id` int(11) UNSIGNED NOT NULL,
+  `entity` varchar(100) NOT NULL,
+  `type` enum('group','user') NOT NULL DEFAULT 'group',
+  `authorized` enum('0','1') NOT NULL DEFAULT '0',
+  PRIMARY KEY (`access_id`,`entity`,`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Contenu de la table `nf_access_details`
+--
+
+INSERT INTO `nf_access_details` VALUES(2, 'visitors', 'group', '0');
+INSERT INTO `nf_access_details` VALUES(3, 'admins', 'group', '1');
+INSERT INTO `nf_access_details` VALUES(5, 'visitors', 'group', '0');
+INSERT INTO `nf_access_details` VALUES(6, 'admins', 'group', '1');
+INSERT INTO `nf_access_details` VALUES(7, 'admins', 'group', '1');
+INSERT INTO `nf_access_details` VALUES(8, 'admins', 'group', '1');
+INSERT INTO `nf_access_details` VALUES(9, 'admins', 'group', '1');
+INSERT INTO `nf_access_details` VALUES(10, 'admins', 'group', '1');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `nf_awards`
+--
+
+DROP TABLE IF EXISTS `nf_awards`;
+CREATE TABLE IF NOT EXISTS `nf_awards` (
+  `award_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `team_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `game_id` int(11) UNSIGNED NOT NULL,
+  `image_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `location` varchar(100) NOT NULL,
+  `date` date NOT NULL,
+  `description` text NOT NULL,
+  `platform` varchar(100) NOT NULL,
+  `ranking` int(11) UNSIGNED NOT NULL,
+  `participants` int(11) UNSIGNED NOT NULL,
+  PRIMARY KEY (`award_id`),
+  KEY `image_id` (`image_id`),
+  KEY `game_id` (`game_id`),
+  KEY `team_id` (`team_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `nf_comments`
 --
 
 DROP TABLE IF EXISTS `nf_comments`;
 CREATE TABLE IF NOT EXISTS `nf_comments` (
-  `comment_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `parent_id` int(11) unsigned DEFAULT NULL,
-  `user_id` int(11) unsigned NOT NULL,
-  `module_id` int(11) unsigned NOT NULL,
+  `comment_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `parent_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `module_id` int(11) UNSIGNED NOT NULL,
   `module` varchar(100) NOT NULL,
-  `content` text,
-  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `content` text NOT NULL,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`comment_id`),
   KEY `parent_id` (`parent_id`),
   KEY `user_id` (`user_id`),
   KEY `module` (`module`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `nf_crawlers`
+--
+
+DROP TABLE IF EXISTS `nf_crawlers`;
+CREATE TABLE IF NOT EXISTS `nf_crawlers` (
+  `name` varchar(100) NOT NULL,
+  `path` varchar(100) NOT NULL,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -50,10 +148,10 @@ CREATE TABLE IF NOT EXISTS `nf_comments` (
 
 DROP TABLE IF EXISTS `nf_dispositions`;
 CREATE TABLE IF NOT EXISTS `nf_dispositions` (
-  `disposition_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `disposition_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `theme` varchar(100) NOT NULL,
   `page` varchar(100) NOT NULL,
-  `zone` int(11) unsigned NOT NULL,
+  `zone` int(11) UNSIGNED NOT NULL,
   `disposition` text NOT NULL,
   PRIMARY KEY (`disposition_id`),
   UNIQUE KEY `theme` (`theme`,`page`,`zone`)
@@ -63,18 +161,18 @@ CREATE TABLE IF NOT EXISTS `nf_dispositions` (
 -- Contenu de la table `nf_dispositions`
 --
 
-INSERT INTO `nf_dispositions` VALUES(1, 'default', '*', 0, 'a:2:{i:0;O:3:"Row":2:{s:5:"style";s:9:"row-white";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:9;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-light";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:10;}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:4:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:11;s:5:"style";s:9:"panel-red";}i:1;O:11:"Widget_View":2:{s:9:"widget_id";i:12;s:5:"style";s:10:"panel-dark";}i:3;O:11:"Widget_View":2:{s:9:"widget_id";i:16;s:5:"style";s:13:"panel-default";}i:2;O:11:"Widget_View":2:{s:9:"widget_id";i:15;s:5:"style";s:13:"panel-default";}}}}}}');
-INSERT INTO `nf_dispositions` VALUES(2, 'default', '*', 1, 'a:1:{i:0;O:3:"Row":2:{s:5:"style";s:11:"row-default";s:4:"cols";a:3:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:6;s:5:"style";s:13:"panel-default";}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:7;s:5:"style";s:10:"panel-dark";}}}i:2;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:8;s:5:"style";s:9:"panel-red";}}}}}}');
+INSERT INTO `nf_dispositions` VALUES(1, 'default', '*', 0, 'a:2:{i:0;O:3:"Row":2:{s:5:"style";s:9:"row-white";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:2;}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:3;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-light";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:4;}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:6:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:5;}i:1;O:11:"Widget_View":2:{s:9:"widget_id";i:6;s:5:"style";s:10:"panel-dark";}i:2;O:11:"Widget_View":2:{s:9:"widget_id";i:7;s:5:"style";s:10:"panel-dark";}i:3;O:11:"Widget_View":2:{s:9:"widget_id";i:8;s:5:"style";s:13:"panel-default";}i:4;O:11:"Widget_View":2:{s:9:"widget_id";i:9;s:5:"style";s:13:"panel-default";}i:5;O:11:"Widget_View":2:{s:9:"widget_id";i:10;s:5:"style";s:9:"panel-red";}}}}}}');
+INSERT INTO `nf_dispositions` VALUES(2, 'default', '*', 1, 'a:1:{i:0;O:3:"Row":2:{s:5:"style";s:11:"row-default";s:4:"cols";a:3:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:11;s:5:"style";s:13:"panel-default";}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:12;s:5:"style";s:10:"panel-dark";}}}i:2;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:13;s:5:"style";s:9:"panel-red";}}}}}}');
 INSERT INTO `nf_dispositions` VALUES(3, 'default', '*', 2, 'a:0:{}');
-INSERT INTO `nf_dispositions` VALUES(4, 'default', '*', 3, 'a:2:{i:0;O:3:"Row":2:{s:5:"style";s:11:"row-default";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:54;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-black";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:2;}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:3;}}}}}}');
-INSERT INTO `nf_dispositions` VALUES(5, 'default', '*', 4, 'a:1:{i:0;O:3:"Row":2:{s:5:"style";s:11:"row-default";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:13;}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:14;}}}}}}');
-INSERT INTO `nf_dispositions` VALUES(6, 'default', '*', 5, 'a:1:{i:0;O:3:"Row":2:{s:5:"style";s:11:"row-default";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:17;s:5:"style";s:10:"panel-dark";}}}}}}');
-INSERT INTO `nf_dispositions` VALUES(7, 'default', '/', 3, 'a:3:{i:0;O:3:"Row":2:{s:5:"style";s:11:"row-default";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:55;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-black";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:20;}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:21;}}}}}i:2;O:3:"Row":2:{s:5:"style";s:11:"row-default";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:22;}}}}}}');
-INSERT INTO `nf_dispositions` VALUES(8, 'default', 'forum/*', 0, 'a:2:{i:0;O:3:"Row":2:{s:5:"style";s:9:"row-white";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:23;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-light";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:24;}}}}}}');
-INSERT INTO `nf_dispositions` VALUES(9, 'default', 'news/_news/*', 0, 'a:2:{i:0;O:3:"Row":2:{s:5:"style";s:9:"row-white";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:31;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-light";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:32;}}}}}}');
-INSERT INTO `nf_dispositions` VALUES(10, 'default', 'contact/*', 0, 'a:2:{i:0;O:3:"Row":2:{s:5:"style";s:9:"row-white";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:37;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-light";s:4:"cols";a:2:{i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:4:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:39;s:5:"style";s:9:"panel-red";}i:1;O:11:"Widget_View":2:{s:9:"widget_id";i:40;s:5:"style";s:10:"panel-dark";}i:3;O:11:"Widget_View":2:{s:9:"widget_id";i:41;s:5:"style";s:13:"panel-default";}i:2;O:11:"Widget_View":2:{s:9:"widget_id";i:42;s:5:"style";s:13:"panel-default";}}}i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:38;}}}}}}');
-INSERT INTO `nf_dispositions` VALUES(12, 'default', 'forum/*', 2, 'a:1:{i:0;O:3:"Row":2:{s:5:"style";s:9:"row-light";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:52;s:5:"style";s:9:"panel-red";}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:53;s:5:"style";s:10:"panel-dark";}}}}}}');
-INSERT INTO `nf_dispositions` VALUES(14, 'default', 'user/*', 0, 'a:2:{i:0;O:3:"Row":2:{s:5:"style";s:9:"row-white";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:58;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-light";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:59;}}}}}}');
+INSERT INTO `nf_dispositions` VALUES(4, 'default', '*', 3, 'a:2:{i:0;O:3:"Row":2:{s:5:"style";s:11:"row-default";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:14;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-black";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-7";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:15;}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-5";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:16;}}}}}}');
+INSERT INTO `nf_dispositions` VALUES(5, 'default', '*', 4, 'a:1:{i:0;O:3:"Row":2:{s:5:"style";s:11:"row-default";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:17;}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:18;}}}}}}');
+INSERT INTO `nf_dispositions` VALUES(6, 'default', '*', 5, 'a:1:{i:0;O:3:"Row":2:{s:5:"style";s:11:"row-default";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:19;s:5:"style";s:10:"panel-dark";}}}}}}');
+INSERT INTO `nf_dispositions` VALUES(7, 'default', '/', 3, 'a:3:{i:0;O:3:"Row":2:{s:5:"style";s:11:"row-default";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:20;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-black";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-7";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:21;}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-5";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:22;}}}}}i:2;O:3:"Row":2:{s:5:"style";s:11:"row-default";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:23;}}}}}}');
+INSERT INTO `nf_dispositions` VALUES(8, 'default', 'forum/*', 0, 'a:2:{i:0;O:3:"Row":2:{s:5:"style";s:9:"row-white";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:24;}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:25;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-light";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:26;}}}}}}');
+INSERT INTO `nf_dispositions` VALUES(9, 'default', 'forum/*', 2, 'a:1:{i:0;O:3:"Row":2:{s:5:"style";s:9:"row-light";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:35;s:5:"style";s:9:"panel-red";}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":2:{s:9:"widget_id";i:36;s:5:"style";s:10:"panel-dark";}}}}}}');
+INSERT INTO `nf_dispositions` VALUES(10, 'default', 'news/_news/*', 0, 'a:2:{i:0;O:3:"Row":2:{s:5:"style";s:9:"row-white";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:27;}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:28;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-light";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:29;}}}}}}');
+INSERT INTO `nf_dispositions` VALUES(11, 'default', 'user/*', 0, 'a:2:{i:0;O:3:"Row":2:{s:5:"style";s:9:"row-white";s:4:"cols";a:2:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:30;}}}i:1;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-4";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:31;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-light";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:32;}}}}}}');
+INSERT INTO `nf_dispositions` VALUES(12, 'default', 'search/*', 0, 'a:2:{i:0;O:3:"Row":2:{s:5:"style";s:9:"row-white";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:8:"col-md-8";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:33;}}}}}i:1;O:3:"Row":2:{s:5:"style";s:9:"row-light";s:4:"cols";a:1:{i:0;O:3:"Col":2:{s:10:"\0Col\0_size";s:9:"col-md-12";s:7:"widgets";a:1:{i:0;O:11:"Widget_View":1:{s:9:"widget_id";i:34;}}}}}}');
 
 -- --------------------------------------------------------
 
@@ -84,11 +182,11 @@ INSERT INTO `nf_dispositions` VALUES(14, 'default', 'user/*', 0, 'a:2:{i:0;O:3:"
 
 DROP TABLE IF EXISTS `nf_files`;
 CREATE TABLE IF NOT EXISTS `nf_files` (
-  `file_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(10) unsigned DEFAULT NULL,
+  `file_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) UNSIGNED NULL DEFAULT NULL,
   `name` varchar(100) NOT NULL,
   `path` varchar(100) NOT NULL,
-  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`file_id`),
   UNIQUE KEY `path` (`path`),
   KEY `user_id` (`user_id`)
@@ -99,6 +197,8 @@ CREATE TABLE IF NOT EXISTS `nf_files` (
 --
 
 INSERT INTO `nf_files` VALUES(1, 1, 'Sans-titre-2.jpg', './upload/news/categories/ubfuejdfooirqya0pyltfeklja4ew4sn.jpg', '2015-05-29 22:34:16');
+INSERT INTO `nf_files` VALUES(2, 1, 'logo.png', 'upload/partners/zwvmsjijfljaka4rdblgvlype1lnbwaw.png', '2016-05-07 16:51:53');
+INSERT INTO `nf_files` VALUES(3, 1, 'logo_black.png', 'upload/partners/y4ofwq2ekppwnfpmnrmnafeivszlg5bd.png', '2016-05-07 16:51:53');
 
 -- --------------------------------------------------------
 
@@ -108,15 +208,15 @@ INSERT INTO `nf_files` VALUES(1, 1, 'Sans-titre-2.jpg', './upload/news/categorie
 
 DROP TABLE IF EXISTS `nf_forum`;
 CREATE TABLE IF NOT EXISTS `nf_forum` (
-  `forum_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `parent_id` int(11) unsigned NOT NULL,
+  `forum_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `parent_id` int(11) UNSIGNED NOT NULL,
   `is_subforum` enum('0','1') NOT NULL DEFAULT '0',
   `title` varchar(100) NOT NULL,
   `description` varchar(100) NOT NULL,
-  `order` smallint(6) unsigned NOT NULL,
-  `count_topics` int(11) unsigned NOT NULL DEFAULT '0',
-  `count_messages` int(11) unsigned NOT NULL DEFAULT '0',
-  `last_message_id` int(11) unsigned DEFAULT NULL,
+  `order` smallint(6) UNSIGNED NOT NULL DEFAULT '0',
+  `count_topics` int(11) UNSIGNED NOT NULL DEFAULT '0',
+  `count_messages` int(11) UNSIGNED NOT NULL DEFAULT '0',
+  `last_message_id` int(11) UNSIGNED NULL DEFAULT NULL,
   PRIMARY KEY (`forum_id`),
   KEY `last_message_id` (`last_message_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
@@ -135,9 +235,9 @@ INSERT INTO `nf_forum` VALUES(1, 1, '0', 'Discussions g&eacute;n&eacute;rales', 
 
 DROP TABLE IF EXISTS `nf_forum_categories`;
 CREATE TABLE IF NOT EXISTS `nf_forum_categories` (
-  `category_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `category_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `title` varchar(100) NOT NULL,
-  `order` smallint(6) unsigned NOT NULL,
+  `order` smallint(6) UNSIGNED NOT NULL NULL DEFAULT '0',
   PRIMARY KEY (`category_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
@@ -155,10 +255,10 @@ INSERT INTO `nf_forum_categories` VALUES(1, 'G&eacute;n&eacute;ral', 0);
 
 DROP TABLE IF EXISTS `nf_forum_messages`;
 CREATE TABLE IF NOT EXISTS `nf_forum_messages` (
-  `message_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `topic_id` int(11) unsigned NOT NULL,
-  `user_id` int(11) unsigned NOT NULL,
-  `message` text,
+  `message_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `topic_id` int(11) UNSIGNED NOT NULL,
+  `user_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `message` text NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`message_id`),
   KEY `topic_id` (`topic_id`),
@@ -173,7 +273,7 @@ CREATE TABLE IF NOT EXISTS `nf_forum_messages` (
 
 DROP TABLE IF EXISTS `nf_forum_polls`;
 CREATE TABLE IF NOT EXISTS `nf_forum_polls` (
-  `topic_id` int(11) unsigned NOT NULL,
+  `topic_id` int(11) UNSIGNED NOT NULL,
   `question` varchar(100) NOT NULL,
   `answers` text NOT NULL,
   `is_multiple_choice` enum('0','1') NOT NULL DEFAULT '0'
@@ -187,8 +287,8 @@ CREATE TABLE IF NOT EXISTS `nf_forum_polls` (
 
 DROP TABLE IF EXISTS `nf_forum_read`;
 CREATE TABLE IF NOT EXISTS `nf_forum_read` (
-  `user_id` int(11) unsigned NOT NULL,
-  `forum_id` int(11) unsigned NOT NULL DEFAULT '0',
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `forum_id` int(11) UNSIGNED NOT NULL DEFAULT '0',
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`,`forum_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -201,14 +301,14 @@ CREATE TABLE IF NOT EXISTS `nf_forum_read` (
 
 DROP TABLE IF EXISTS `nf_forum_topics`;
 CREATE TABLE IF NOT EXISTS `nf_forum_topics` (
-  `topic_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `forum_id` int(11) unsigned NOT NULL,
-  `message_id` int(11) unsigned NOT NULL,
+  `topic_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `forum_id` int(11) UNSIGNED NOT NULL,
+  `message_id` int(11) UNSIGNED NULL DEFAULT NULL,
   `title` varchar(100) NOT NULL,
   `status` enum('-2','-1','0','1') NOT NULL DEFAULT '0',
-  `views` int(11) unsigned NOT NULL,
-  `count_messages` int(11) unsigned NOT NULL,
-  `last_message_id` int(11) unsigned DEFAULT NULL,
+  `views` int(11) UNSIGNED NOT NULL DEFAULT '0',
+  `count_messages` int(11) UNSIGNED NOT NULL DEFAULT '0',
+  `last_message_id` int(11) UNSIGNED NULL DEFAULT NULL,
   PRIMARY KEY (`topic_id`),
   UNIQUE KEY `last_message_id` (`last_message_id`),
   KEY `forum_id` (`forum_id`),
@@ -223,8 +323,8 @@ CREATE TABLE IF NOT EXISTS `nf_forum_topics` (
 
 DROP TABLE IF EXISTS `nf_forum_topics_read`;
 CREATE TABLE IF NOT EXISTS `nf_forum_topics_read` (
-  `topic_id` int(11) unsigned NOT NULL,
-  `user_id` int(11) unsigned NOT NULL,
+  `topic_id` int(11) UNSIGNED NOT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`topic_id`,`user_id`),
   KEY `user_id` (`user_id`)
@@ -238,8 +338,8 @@ CREATE TABLE IF NOT EXISTS `nf_forum_topics_read` (
 
 DROP TABLE IF EXISTS `nf_forum_track`;
 CREATE TABLE IF NOT EXISTS `nf_forum_track` (
-  `topic_id` int(11) unsigned NOT NULL,
-  `user_id` int(11) unsigned NOT NULL,
+  `topic_id` int(11) UNSIGNED NOT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
   PRIMARY KEY (`topic_id`,`user_id`),
   KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -252,10 +352,100 @@ CREATE TABLE IF NOT EXISTS `nf_forum_track` (
 
 DROP TABLE IF EXISTS `nf_forum_url`;
 CREATE TABLE IF NOT EXISTS `nf_forum_url` (
-  `forum_id` int(11) unsigned NOT NULL,
+  `forum_id` int(11) UNSIGNED NOT NULL,
   `url` varchar(100) NOT NULL,
-  `redirects` int(11) unsigned NOT NULL,
+  `redirects` int(11) UNSIGNED NOT NULL DEFAULT '0',
   PRIMARY KEY (`forum_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `nf_gallery`
+--
+
+DROP TABLE IF EXISTS `nf_gallery`;
+CREATE TABLE IF NOT EXISTS `nf_gallery` (
+  `gallery_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `category_id` int(11) UNSIGNED NOT NULL,
+  `image_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `published` enum('0','1') NOT NULL DEFAULT '0',
+  PRIMARY KEY (`gallery_id`),
+  KEY `category_id` (`category_id`),
+  KEY `image_id` (`image_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `nf_gallery_categories`
+--
+
+DROP TABLE IF EXISTS `nf_gallery_categories`;
+CREATE TABLE IF NOT EXISTS `nf_gallery_categories` (
+  `category_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `image_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `icon_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  PRIMARY KEY (`category_id`),
+  KEY `image_id` (`image_id`),
+  KEY `icon_id` (`icon_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `nf_gallery_categories_lang`
+--
+
+DROP TABLE IF EXISTS `nf_gallery_categories_lang`;
+CREATE TABLE IF NOT EXISTS `nf_gallery_categories_lang` (
+  `category_id` int(11) UNSIGNED NOT NULL,
+  `lang` varchar(5) NOT NULL,
+  `title` varchar(100) NOT NULL,
+  PRIMARY KEY (`category_id`,`lang`),
+  KEY `lang` (`lang`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `nf_gallery_images`
+--
+
+DROP TABLE IF EXISTS `nf_gallery_images`;
+CREATE TABLE IF NOT EXISTS `nf_gallery_images` (
+  `image_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `thumbnail_file_id` int(11) UNSIGNED NOT NULL,
+  `original_file_id` int(11) UNSIGNED NOT NULL,
+  `file_id` int(11) UNSIGNED NOT NULL,
+  `gallery_id` int(11) UNSIGNED NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `description` text NOT NULL,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `views` int(11) UNSIGNED NOT NULL DEFAULT '0',
+  PRIMARY KEY (`image_id`),
+  KEY `file_id` (`file_id`),
+  KEY `gallery_id` (`gallery_id`),
+  KEY `original_file_id` (`original_file_id`),
+  KEY `thumbnail_file_id` (`thumbnail_file_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `nf_gallery_lang`
+--
+
+DROP TABLE IF EXISTS `nf_gallery_lang`;
+CREATE TABLE IF NOT EXISTS `nf_gallery_lang` (
+  `gallery_id` int(11) UNSIGNED NOT NULL,
+  `lang` varchar(5) NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `description` text NOT NULL,
+  PRIMARY KEY (`gallery_id`,`lang`),
+  KEY `lang` (`lang`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -266,10 +456,10 @@ CREATE TABLE IF NOT EXISTS `nf_forum_url` (
 
 DROP TABLE IF EXISTS `nf_games`;
 CREATE TABLE IF NOT EXISTS `nf_games` (
-  `game_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `parent_id` int(11) unsigned DEFAULT NULL,
-  `image_id` int(11) unsigned DEFAULT NULL,
-  `icon_id` int(11) unsigned DEFAULT NULL,
+  `game_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `parent_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `image_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `icon_id` int(11) UNSIGNED NULL DEFAULT NULL,
   `name` varchar(100) NOT NULL,
   PRIMARY KEY (`game_id`),
   KEY `image_id` (`image_id`),
@@ -285,11 +475,43 @@ CREATE TABLE IF NOT EXISTS `nf_games` (
 
 DROP TABLE IF EXISTS `nf_games_lang`;
 CREATE TABLE IF NOT EXISTS `nf_games_lang` (
-  `game_id` int(11) unsigned NOT NULL,
+  `game_id` int(11) UNSIGNED NOT NULL,
   `lang` varchar(5) NOT NULL,
   `title` varchar(100) NOT NULL,
   PRIMARY KEY (`game_id`,`lang`),
   KEY `lang` (`lang`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `nf_games_maps`
+--
+
+DROP TABLE IF EXISTS `nf_games_maps`;
+CREATE TABLE IF NOT EXISTS `nf_games_maps` (
+  `map_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `game_id` int(11) UNSIGNED NOT NULL,
+  `image_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `title` varchar(100) NOT NULL,
+  PRIMARY KEY (`map_id`),
+  KEY `game_id` (`game_id`),
+  KEY `image_id` (`image_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `nf_games_modes`
+--
+
+DROP TABLE IF EXISTS `nf_games_modes`;
+CREATE TABLE IF NOT EXISTS `nf_games_modes` (
+  `mode_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `game_id` int(11) UNSIGNED NOT NULL,
+  `title` varchar(100) NOT NULL,
+  PRIMARY KEY (`mode_id`),
+  KEY `game_id` (`game_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -300,7 +522,7 @@ CREATE TABLE IF NOT EXISTS `nf_games_lang` (
 
 DROP TABLE IF EXISTS `nf_groups`;
 CREATE TABLE IF NOT EXISTS `nf_groups` (
-  `group_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `color` varchar(20) NOT NULL,
   `icon` varchar(20) NOT NULL,
@@ -324,7 +546,7 @@ INSERT INTO `nf_groups` VALUES(3, 'visitors', 'info', '', '1');
 
 DROP TABLE IF EXISTS `nf_groups_lang`;
 CREATE TABLE IF NOT EXISTS `nf_groups_lang` (
-  `group_id` int(11) unsigned NOT NULL,
+  `group_id` int(11) UNSIGNED NOT NULL,
   `lang` varchar(5) NOT NULL,
   `title` varchar(100) NOT NULL,
   PRIMARY KEY (`group_id`,`lang`),
@@ -339,13 +561,13 @@ CREATE TABLE IF NOT EXISTS `nf_groups_lang` (
 
 DROP TABLE IF EXISTS `nf_news`;
 CREATE TABLE IF NOT EXISTS `nf_news` (
-  `news_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `category_id` int(11) unsigned NOT NULL,
-  `user_id` int(11) unsigned NOT NULL,
-  `image_id` int(11) unsigned DEFAULT NULL,
+  `news_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `category_id` int(11) UNSIGNED NOT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `image_id` int(11) UNSIGNED NULL DEFAULT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `published` enum('0','1') NOT NULL DEFAULT '0',
-  `views` int(11) unsigned NOT NULL,
+  `views` int(11) UNSIGNED NOT NULL DEFAULT '0',
   `vote` enum('0','1') NOT NULL DEFAULT '0',
   PRIMARY KEY (`news_id`),
   KEY `category_id` (`category_id`),
@@ -367,9 +589,9 @@ INSERT INTO `nf_news` VALUES(1, 1, 1, NULL, CURRENT_TIMESTAMP, '1', 0, '0');
 
 DROP TABLE IF EXISTS `nf_news_categories`;
 CREATE TABLE IF NOT EXISTS `nf_news_categories` (
-  `category_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `image_id` int(11) unsigned DEFAULT NULL,
-  `icon_id` int(11) unsigned DEFAULT NULL,
+  `category_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `image_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `icon_id` int(11) UNSIGNED NULL DEFAULT NULL,
   `name` varchar(100) NOT NULL,
   PRIMARY KEY (`category_id`),
   KEY `image_id` (`image_id`),
@@ -390,7 +612,7 @@ INSERT INTO `nf_news_categories` VALUES(1, 1, NULL, 'general');
 
 DROP TABLE IF EXISTS `nf_news_categories_lang`;
 CREATE TABLE IF NOT EXISTS `nf_news_categories_lang` (
-  `category_id` int(11) unsigned NOT NULL,
+  `category_id` int(11) UNSIGNED NOT NULL,
   `lang` varchar(5) NOT NULL,
   `title` varchar(100) NOT NULL,
   PRIMARY KEY (`category_id`,`lang`),
@@ -411,7 +633,7 @@ INSERT INTO `nf_news_categories_lang` VALUES(1, 'fr', 'G&eacute;n&eacute;ral');
 
 DROP TABLE IF EXISTS `nf_news_lang`;
 CREATE TABLE IF NOT EXISTS `nf_news_lang` (
-  `news_id` int(11) unsigned NOT NULL,
+  `news_id` int(11) UNSIGNED NOT NULL,
   `lang` varchar(5) NOT NULL,
   `title` varchar(100) NOT NULL,
   `introduction` text NOT NULL,
@@ -435,7 +657,7 @@ INSERT INTO `nf_news_lang` VALUES(1, 'fr', 'Bienvenue sur votre site NeoFrag Alp
 
 DROP TABLE IF EXISTS `nf_pages`;
 CREATE TABLE IF NOT EXISTS `nf_pages` (
-  `page_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `page_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `published` enum('0','1') NOT NULL DEFAULT '0',
   PRIMARY KEY (`page_id`),
@@ -450,7 +672,7 @@ CREATE TABLE IF NOT EXISTS `nf_pages` (
 
 DROP TABLE IF EXISTS `nf_pages_lang`;
 CREATE TABLE IF NOT EXISTS `nf_pages_lang` (
-  `page_id` int(11) unsigned NOT NULL,
+  `page_id` int(11) UNSIGNED NOT NULL,
   `lang` varchar(5) NOT NULL,
   `title` varchar(100) NOT NULL,
   `subtitle` varchar(100) NOT NULL,
@@ -462,64 +684,53 @@ CREATE TABLE IF NOT EXISTS `nf_pages_lang` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `nf_permissions`
+-- Structure de la table `nf_partners`
 --
 
-DROP TABLE IF EXISTS `nf_permissions`;
-CREATE TABLE IF NOT EXISTS `nf_permissions` (
-  `permission_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `addon_id` int(11) unsigned NOT NULL,
-  `addon` varchar(100) NOT NULL,
-  `action` varchar(100) NOT NULL,
-  PRIMARY KEY (`permission_id`),
-  UNIQUE KEY `module_id` (`addon_id`,`addon`,`action`),
-  KEY `module` (`addon`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+DROP TABLE IF EXISTS `nf_partners`;
+CREATE TABLE IF NOT EXISTS `nf_partners` (
+  `partner_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `logo_light` int(11) UNSIGNED NULL DEFAULT NULL,
+  `logo_dark` int(11) UNSIGNED NULL DEFAULT NULL,
+  `website` varchar(100) NOT NULL,
+  `facebook` varchar(100) NOT NULL,
+  `twitter` varchar(100) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `count` int(11) UNSIGNED NOT NULL DEFAULT '0',
+  `order` tinyint(6) UNSIGNED NOT NULL DEFAULT '0',
+  PRIMARY KEY (`partner_id`),
+  KEY `image_id` (`logo_light`),
+  KEY `logo_dark` (`logo_dark`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Contenu de la table `nf_permissions`
+-- Contenu de la table `nf_partners`
 --
 
-INSERT INTO `nf_permissions` VALUES(1, 1, 'talks', 'read');
-INSERT INTO `nf_permissions` VALUES(2, 1, 'talks', 'write');
-INSERT INTO `nf_permissions` VALUES(3, 1, 'talks', 'delete');
-INSERT INTO `nf_permissions` VALUES(4, 2, 'talks', 'write');
-INSERT INTO `nf_permissions` VALUES(5, 2, 'talks', 'delete');
-INSERT INTO `nf_permissions` VALUES(6, 1, 'forum', 'category_write');
-INSERT INTO `nf_permissions` VALUES(7, 1, 'forum', 'category_modify');
-INSERT INTO `nf_permissions` VALUES(8, 1, 'forum', 'category_delete');
-INSERT INTO `nf_permissions` VALUES(9, 1, 'forum', 'category_announce');
-INSERT INTO `nf_permissions` VALUES(10, 1, 'forum', 'category_lock');
+INSERT INTO `nf_partners` VALUES(1, 'neofrag', 2, 3, 'https://neofr.ag', 'https://www.facebook.com/NeoFrag-CMS-345511868808600/', 'https://twitter.com/NeoFragCMS', '', 1, 0);
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `nf_permissions_details`
+-- Structure de la table `nf_partners_lang`
 --
 
-DROP TABLE IF EXISTS `nf_permissions_details`;
-CREATE TABLE IF NOT EXISTS `nf_permissions_details` (
-  `permission_id` int(11) unsigned NOT NULL,
-  `entity_id` int(11) unsigned NOT NULL,
-  `type` enum('group','user') NOT NULL DEFAULT 'group',
-  `authorized` enum('0','1') NOT NULL DEFAULT '0',
-  PRIMARY KEY (`permission_id`,`entity_id`,`type`)
+DROP TABLE IF EXISTS `nf_partners_lang`;
+CREATE TABLE IF NOT EXISTS `nf_partners_lang` (
+  `partner_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `lang` varchar(5) NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `description` text NOT NULL,
+  PRIMARY KEY (`partner_id`),
+  KEY `lang` (`lang`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Contenu de la table `nf_permissions_details`
+-- Contenu de la table `nf_partners_lang`
 --
 
-INSERT INTO `nf_permissions_details` VALUES(1, 1, 'group', '1');
-INSERT INTO `nf_permissions_details` VALUES(2, 1, 'group', '1');
-INSERT INTO `nf_permissions_details` VALUES(3, 1, 'group', '1');
-INSERT INTO `nf_permissions_details` VALUES(4, 2, 'group', '1');
-INSERT INTO `nf_permissions_details` VALUES(5, 1, 'group', '1');
-INSERT INTO `nf_permissions_details` VALUES(6, 2, 'group', '1');
-INSERT INTO `nf_permissions_details` VALUES(7, 1, 'group', '1');
-INSERT INTO `nf_permissions_details` VALUES(8, 1, 'group', '1');
-INSERT INTO `nf_permissions_details` VALUES(9, 1, 'group', '1');
-INSERT INTO `nf_permissions_details` VALUES(10, 1, 'group', '1');
+INSERT INTO `nf_partners_lang` VALUES(1, 'fr', 'NeoFrag', 'NeoFrag est un CMS (syst&egrave;me de gestion de contenu) &agrave; la fois puissant, compact et performant, pour cr&eacute;er votre site web orient&eacute; eSport !\r\n\r\n[b]C''est enti&egrave;rement gratuit et personnalisable ![/b]\r\nPeu importe votre niveau dans le domaine du web, ce projet a pour but de vous proposer une solution cl&eacute;s en main pour cr&eacute;er votre site &agrave; l''aide d''interfaces modernes, personnalisables et &eacute;volutives pour correspondre &agrave; un maximum d''univers.');
 
 -- --------------------------------------------------------
 
@@ -530,7 +741,7 @@ INSERT INTO `nf_permissions_details` VALUES(10, 1, 'group', '1');
 DROP TABLE IF EXISTS `nf_search_keywords`;
 CREATE TABLE IF NOT EXISTS `nf_search_keywords` (
   `keyword` varchar(100) NOT NULL,
-  `count` int(11) unsigned NOT NULL,
+  `count` int(11) UNSIGNED NOT NULL,
   PRIMARY KEY (`keyword`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -545,7 +756,8 @@ CREATE TABLE IF NOT EXISTS `nf_sessions` (
   `session_id` varchar(32) NOT NULL,
   `ip_address` varchar(39) NOT NULL,
   `host_name` varchar(100) NOT NULL,
-  `user_id` int(11) unsigned DEFAULT NULL,
+  `user_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `is_crawler` enum('0','1') NOT NULL DEFAULT '0',
   `last_activity` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `user_data` text NOT NULL,
   `remember_me` enum('0','1') NOT NULL DEFAULT '0',
@@ -561,18 +773,17 @@ CREATE TABLE IF NOT EXISTS `nf_sessions` (
 
 DROP TABLE IF EXISTS `nf_sessions_history`;
 CREATE TABLE IF NOT EXISTS `nf_sessions_history` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `session_id` varchar(32) DEFAULT NULL,
-  `user_id` int(11) unsigned NOT NULL,
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `session_id` varchar(32) NULL DEFAULT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
   `ip_address` varchar(39) NOT NULL,
   `host_name` varchar(100) NOT NULL,
   `referer` varchar(100) NOT NULL,
-  `user_agent` varchar(100) NOT NULL,
+  `user_agent` varchar(250) NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `session_id` (`session_id`,`user_id`,`ip_address`,`host_name`,`referer`,`user_agent`,`date`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -600,14 +811,50 @@ INSERT INTO `nf_settings` VALUES('news_per_page', '', '', '5', 'int');
 INSERT INTO `nf_settings` VALUES('nf_analytics', '', '', '', 'string');
 INSERT INTO `nf_settings` VALUES('nf_contact', '', '', 'noreply@neofrag.com', 'string');
 INSERT INTO `nf_settings` VALUES('nf_cookie_expire', '', '', '1 hour', 'string');
-INSERT INTO `nf_settings` VALUES('nf_cookie_name', '', '', 'nf_session', 'string');
+INSERT INTO `nf_settings` VALUES('nf_cookie_name', '', '', 'session', 'string');
 INSERT INTO `nf_settings` VALUES('nf_debug', '', '', '0', 'int');
 INSERT INTO `nf_settings` VALUES('nf_default_page', 'default', '', 'news', 'string');
 INSERT INTO `nf_settings` VALUES('nf_default_theme', 'default', '', 'default', 'string');
-INSERT INTO `nf_settings` VALUES('nf_description', 'default', '', 'ALPHA 0.1', 'string');
+INSERT INTO `nf_settings` VALUES('nf_description', 'default', '', 'ALPHA 0.1.5.3', 'string');
 INSERT INTO `nf_settings` VALUES('nf_humans_txt', '', '', '/* TEAM */\n	NeoFrag CMS for gamers\n	Contact: contact [at] neofrag.fr\n	Twitter: @NeoFragCMS\n	From: France\n\n	Developper: Micha&euml;l BILCOT\n	Contact: michael.bilcot [at] neofrag.fr\n	Twitter: @NeoFragCMS\n	From: Paris, France\n\n	Designer: J&eacute;r&eacute;my VALENTIN\n	Contact: jeremy.valentin [at] neofrag.fr\n	Twitter: @NeoFragCMS\n	From: Caen, France', 'string');
 INSERT INTO `nf_settings` VALUES('nf_name', 'default', '', 'NeoFrag CMS', 'string');
 INSERT INTO `nf_settings` VALUES('nf_robots_txt', '', '', 'User-agent: *\r\nDisallow:', 'string');
+INSERT INTO `nf_settings` VALUES('default_background_attachment', '', '', 'scroll', 'string');
+INSERT INTO `nf_settings` VALUES('default_background_color', '', '', '#141d26', 'string');
+INSERT INTO `nf_settings` VALUES('default_background_position', '', '', 'center top', 'string');
+INSERT INTO `nf_settings` VALUES('default_background_repeat', '', '', 'no-repeat', 'string');
+INSERT INTO `nf_settings` VALUES('partners_logo_display', '', '', 'logo_dark', 'string');
+INSERT INTO `nf_settings` VALUES('nf_captcha_private_key', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_captcha_public_key', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_email_password', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_email_port', '', '', '25', 'int');
+INSERT INTO `nf_settings` VALUES('nf_email_secure', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_email_smtp', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_email_username', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_registration_charte', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_registration_status', '', '', '0', 'string');
+INSERT INTO `nf_settings` VALUES('nf_social_behance', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_social_deviantart', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_social_dribble', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_social_facebook', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_social_flickr', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_social_github', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_social_google', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_social_instagram', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_social_steam', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_social_twitch', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_social_twitter', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_social_youtube', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_team_biographie', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_team_creation', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_team_name', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_team_type', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_welcome', '', '', '0', 'bool');
+INSERT INTO `nf_settings` VALUES('nf_welcome_content', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_welcome_title', '', '', '', 'string');
+INSERT INTO `nf_settings` VALUES('nf_welcome_user_id', '', '', '0', 'int');
+INSERT INTO `nf_settings` VALUES('nf_version_css', '', '', '0', 'int');
+INSERT INTO `nf_settings` VALUES('nf_monitoring_last_check', '', '', '0', 'int');
 
 -- --------------------------------------------------------
 
@@ -619,7 +866,7 @@ DROP TABLE IF EXISTS `nf_settings_addons`;
 CREATE TABLE IF NOT EXISTS `nf_settings_addons` (
   `name` varchar(100) NOT NULL,
   `type` enum('module','theme','widget') NOT NULL,
-  `enable` enum('0','1') NOT NULL DEFAULT '0',
+  `is_enabled` enum('0','1') NOT NULL DEFAULT '0',
   PRIMARY KEY (`name`,`type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -627,14 +874,21 @@ CREATE TABLE IF NOT EXISTS `nf_settings_addons` (
 -- Contenu de la table `nf_settings_addons`
 --
 
+INSERT INTO `nf_settings_addons` VALUES('access', 'module', '1');
+INSERT INTO `nf_settings_addons` VALUES('addons', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('admin', 'module', '1');
+INSERT INTO `nf_settings_addons` VALUES('awards', 'module', '1');
+INSERT INTO `nf_settings_addons` VALUES('awards', 'widget', '1');
 INSERT INTO `nf_settings_addons` VALUES('breadcrumb', 'widget', '1');
 INSERT INTO `nf_settings_addons` VALUES('comments', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('contact', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('default', 'theme', '1');
 INSERT INTO `nf_settings_addons` VALUES('error', 'module', '1');
+INSERT INTO `nf_settings_addons` VALUES('error', 'widget', '1');
 INSERT INTO `nf_settings_addons` VALUES('forum', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('forum', 'widget', '1');
+INSERT INTO `nf_settings_addons` VALUES('gallery', 'module', '1');
+INSERT INTO `nf_settings_addons` VALUES('gallery', 'widget', '1');
 INSERT INTO `nf_settings_addons` VALUES('games', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('header', 'widget', '1');
 INSERT INTO `nf_settings_addons` VALUES('html', 'widget', '1');
@@ -642,16 +896,22 @@ INSERT INTO `nf_settings_addons` VALUES('live_editor', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('members', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('members', 'widget', '1');
 INSERT INTO `nf_settings_addons` VALUES('module', 'widget', '1');
+INSERT INTO `nf_settings_addons` VALUES('monitoring', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('navigation', 'widget', '1');
 INSERT INTO `nf_settings_addons` VALUES('news', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('news', 'widget', '1');
 INSERT INTO `nf_settings_addons` VALUES('pages', 'module', '1');
+INSERT INTO `nf_settings_addons` VALUES('partners', 'module', '1');
+INSERT INTO `nf_settings_addons` VALUES('partners', 'widget', '1');
 INSERT INTO `nf_settings_addons` VALUES('search', 'module', '1');
+INSERT INTO `nf_settings_addons` VALUES('search', 'widget', '1');
 INSERT INTO `nf_settings_addons` VALUES('settings', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('slider', 'widget', '1');
+INSERT INTO `nf_settings_addons` VALUES('statistics', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('talks', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('talks', 'widget', '1');
 INSERT INTO `nf_settings_addons` VALUES('teams', 'module', '1');
+INSERT INTO `nf_settings_addons` VALUES('teams', 'widget', '1');
 INSERT INTO `nf_settings_addons` VALUES('user', 'module', '1');
 INSERT INTO `nf_settings_addons` VALUES('user', 'widget', '1');
 
@@ -663,21 +923,23 @@ INSERT INTO `nf_settings_addons` VALUES('user', 'widget', '1');
 
 DROP TABLE IF EXISTS `nf_settings_languages`;
 CREATE TABLE IF NOT EXISTS `nf_settings_languages` (
-  `language_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `code` varchar(5) NOT NULL,
-  `domain_extension` varchar(6) NOT NULL,
   `name` varchar(100) NOT NULL,
   `flag` varchar(100) NOT NULL,
-  `order` smallint(6) unsigned NOT NULL,
-  PRIMARY KEY (`language_id`),
-  UNIQUE KEY `code` (`code`)
+  `order` smallint(6) UNSIGNED NOT NULL DEFAULT '0',
+  PRIMARY KEY (`code`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 --
 -- Contenu de la table `nf_settings_languages`
 --
 
-INSERT INTO `nf_settings_languages` VALUES(1, 'fr', '.fr', 'Français', 'fr.png', 1);
+INSERT INTO `nf_settings_languages` VALUES('fr', 'Français', 'fr.png', 1);
+INSERT INTO `nf_settings_languages` VALUES('en', 'English', 'gb.png', 2);
+INSERT INTO `nf_settings_languages` VALUES('de', 'Deutsch', 'de.png', 3);
+INSERT INTO `nf_settings_languages` VALUES('es', 'Español', 'es.png', 4);
+INSERT INTO `nf_settings_languages` VALUES('it', 'Italiano', 'it.png', 5);
+INSERT INTO `nf_settings_languages` VALUES('pt', 'Português', 'pt.png', 6);
 
 -- --------------------------------------------------------
 
@@ -687,8 +949,8 @@ INSERT INTO `nf_settings_languages` VALUES(1, 'fr', '.fr', 'Français', 'fr.png'
 
 DROP TABLE IF EXISTS `nf_settings_smileys`;
 CREATE TABLE IF NOT EXISTS `nf_settings_smileys` (
-  `smiley_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `file_id` int(11) unsigned NOT NULL,
+  `smiley_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `file_id` int(11) UNSIGNED NOT NULL,
   `code` varchar(15) NOT NULL,
   PRIMARY KEY (`smiley_id`),
   UNIQUE KEY `code` (`code`)
@@ -721,7 +983,7 @@ INSERT INTO `nf_statistics` VALUES('nf_sessions_max_simultaneous', '0');
 
 DROP TABLE IF EXISTS `nf_talks`;
 CREATE TABLE IF NOT EXISTS `nf_talks` (
-  `talk_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `talk_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
   PRIMARY KEY (`talk_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1;
@@ -741,10 +1003,10 @@ INSERT INTO `nf_talks` VALUES(2, 'public');
 
 DROP TABLE IF EXISTS `nf_talks_messages`;
 CREATE TABLE IF NOT EXISTS `nf_talks_messages` (
-  `message_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `talk_id` int(10) unsigned NOT NULL,
-  `user_id` int(10) unsigned NOT NULL,
-  `message` text,
+  `message_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `talk_id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NULL DEFAULT NULL,
+  `message` text NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`message_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1;
@@ -763,11 +1025,12 @@ INSERT INTO `nf_talks_messages` VALUES(1, 2, 1, 'Bienvenue sur votre nouveau sit
 
 DROP TABLE IF EXISTS `nf_teams`;
 CREATE TABLE IF NOT EXISTS `nf_teams` (
-  `team_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `game_id` int(11) unsigned NOT NULL,
-  `image_id` int(11) unsigned DEFAULT NULL,
-  `icon_id` int(11) unsigned DEFAULT NULL,
+  `team_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `game_id` int(11) UNSIGNED NOT NULL,
+  `image_id` int(11) UNSIGNED NULL DEFAULT NULL,
+  `icon_id` int(11) UNSIGNED NULL DEFAULT NULL,
   `name` varchar(100) NOT NULL,
+  `order` smallint(6) UNSIGNED NOT NULL DEFAULT '0',
   PRIMARY KEY (`team_id`),
   KEY `activity_id` (`game_id`),
   KEY `image_id` (`image_id`),
@@ -782,7 +1045,7 @@ CREATE TABLE IF NOT EXISTS `nf_teams` (
 
 DROP TABLE IF EXISTS `nf_teams_lang`;
 CREATE TABLE IF NOT EXISTS `nf_teams_lang` (
-  `team_id` int(11) unsigned NOT NULL,
+  `team_id` int(11) UNSIGNED NOT NULL,
   `lang` varchar(5) NOT NULL,
   `title` varchar(100) NOT NULL,
   `description` text NOT NULL,
@@ -798,8 +1061,9 @@ CREATE TABLE IF NOT EXISTS `nf_teams_lang` (
 
 DROP TABLE IF EXISTS `nf_teams_roles`;
 CREATE TABLE IF NOT EXISTS `nf_teams_roles` (
-  `role_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `role_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `title` varchar(100) NOT NULL,
+  `order` smallint(6) UNSIGNED NOT NULL DEFAULT '0',
   PRIMARY KEY (`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -811,13 +1075,14 @@ CREATE TABLE IF NOT EXISTS `nf_teams_roles` (
 
 DROP TABLE IF EXISTS `nf_teams_users`;
 CREATE TABLE IF NOT EXISTS `nf_teams_users` (
-  `team_id` int(11) unsigned NOT NULL,
-  `user_id` int(11) unsigned NOT NULL,
-  `role_id` int(10) unsigned DEFAULT NULL,
+  `team_id` int(11) UNSIGNED NOT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `role_id` int(10) UNSIGNED NULL DEFAULT NULL,
   PRIMARY KEY (`team_id`,`user_id`),
   KEY `user_id` (`user_id`),
   KEY `role_id` (`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- --------------------------------------------------------
 
 --
@@ -826,16 +1091,15 @@ CREATE TABLE IF NOT EXISTS `nf_teams_users` (
 
 DROP TABLE IF EXISTS `nf_users`;
 CREATE TABLE IF NOT EXISTS `nf_users` (
-  `user_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `username` varchar(100) NOT NULL,
   `password` varchar(34) NOT NULL,
   `salt` varchar(32) NOT NULL,
   `email` varchar(100) NOT NULL,
   `registration_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `last_activity_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `last_activity_date` timestamp NULL DEFAULT NULL,
   `admin` enum('0','1') NOT NULL DEFAULT '0',
-  `theme` varchar(100) DEFAULT NULL,
-  `language` varchar(5) DEFAULT NULL,
+  `language` varchar(5) NULL DEFAULT NULL,
   `deleted` enum('0','1') NOT NULL DEFAULT '0',
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `username` (`username`),
@@ -848,7 +1112,7 @@ CREATE TABLE IF NOT EXISTS `nf_users` (
 -- Contenu de la table `nf_users`
 --
 
-INSERT INTO `nf_users` VALUES(1, 'admin', '$H$92EwygSmbdXunbIvoo/V91MWcnHqzX/', '', 'noreply@neofrag.com', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '1', NULL, NULL, '0');
+INSERT INTO `nf_users` VALUES(1, 'admin', '$H$92EwygSmbdXunbIvoo/V91MWcnHqzX/', '', 'noreply@neofrag.com', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '1', NULL, '0');
 
 -- --------------------------------------------------------
 
@@ -858,8 +1122,8 @@ INSERT INTO `nf_users` VALUES(1, 'admin', '$H$92EwygSmbdXunbIvoo/V91MWcnHqzX/', 
 
 DROP TABLE IF EXISTS `nf_users_groups`;
 CREATE TABLE IF NOT EXISTS `nf_users_groups` (
-  `user_id` int(11) unsigned NOT NULL,
-  `group_id` int(11) unsigned NOT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `group_id` int(11) UNSIGNED NOT NULL,
   PRIMARY KEY (`user_id`,`group_id`),
   KEY `group_id` (`group_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -873,7 +1137,7 @@ CREATE TABLE IF NOT EXISTS `nf_users_groups` (
 DROP TABLE IF EXISTS `nf_users_keys`;
 CREATE TABLE IF NOT EXISTS `nf_users_keys` (
   `key_id` varchar(32) NOT NULL,
-  `user_id` int(11) unsigned NOT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
   `session_id` varchar(32) NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`key_id`),
@@ -889,13 +1153,13 @@ CREATE TABLE IF NOT EXISTS `nf_users_keys` (
 
 DROP TABLE IF EXISTS `nf_users_messages`;
 CREATE TABLE IF NOT EXISTS `nf_users_messages` (
-  `message_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) unsigned NOT NULL,
+  `message_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `reply_id` int(11) UNSIGNED NULL DEFAULT NULL,
   `title` varchar(100) NOT NULL,
-  `content` text NOT NULL,
-  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_reply_id` int(11) UNSIGNED NULL DEFAULT NULL,
   PRIMARY KEY (`message_id`),
-  KEY `user_id` (`user_id`)
+  KEY `reply_id` (`reply_id`),
+  KEY `last_reply_id` (`last_reply_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -906,9 +1170,10 @@ CREATE TABLE IF NOT EXISTS `nf_users_messages` (
 
 DROP TABLE IF EXISTS `nf_users_messages_recipients`;
 CREATE TABLE IF NOT EXISTS `nf_users_messages_recipients` (
-  `user_id` int(11) unsigned NOT NULL,
-  `message_id` int(11) unsigned NOT NULL,
-  `read` enum('0','1') NOT NULL DEFAULT '0',
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `message_id` int(11) UNSIGNED NOT NULL,
+  `date` timestamp NULL DEFAULT NULL,
+  `deleted` enum('0','1') NOT NULL DEFAULT '0',
   PRIMARY KEY (`user_id`,`message_id`),
   KEY `message_id` (`message_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -921,12 +1186,11 @@ CREATE TABLE IF NOT EXISTS `nf_users_messages_recipients` (
 
 DROP TABLE IF EXISTS `nf_users_messages_replies`;
 CREATE TABLE IF NOT EXISTS `nf_users_messages_replies` (
-  `reply_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `message_id` int(11) unsigned NOT NULL,
-  `user_id` int(11) unsigned NOT NULL,
-  `content` text NOT NULL,
+  `reply_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `message_id` int(11) UNSIGNED NOT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `message` text NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `read` enum('0','1') NOT NULL DEFAULT '0',
   PRIMARY KEY (`reply_id`),
   KEY `message_id` (`message_id`,`user_id`),
   KEY `user_id` (`user_id`)
@@ -940,13 +1204,13 @@ CREATE TABLE IF NOT EXISTS `nf_users_messages_replies` (
 
 DROP TABLE IF EXISTS `nf_users_profiles`;
 CREATE TABLE IF NOT EXISTS `nf_users_profiles` (
-  `user_id` int(11) unsigned NOT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
-  `avatar` int(11) unsigned DEFAULT NULL,
+  `avatar` int(11) UNSIGNED NULL DEFAULT NULL,
   `signature` text NOT NULL,
   `date_of_birth` date NOT NULL,
-  `sex` enum('male','female') DEFAULT NULL,
+  `sex` enum('male','female') NULL DEFAULT NULL,
   `location` varchar(100) NOT NULL,
   `quote` varchar(100) NOT NULL,
   `website` varchar(100) NOT NULL,
@@ -962,9 +1226,9 @@ CREATE TABLE IF NOT EXISTS `nf_users_profiles` (
 
 DROP TABLE IF EXISTS `nf_votes`;
 CREATE TABLE IF NOT EXISTS `nf_votes` (
-  `module_id` int(11) unsigned NOT NULL,
+  `module_id` int(11) UNSIGNED NOT NULL,
   `module` varchar(100) NOT NULL,
-  `user_id` int(11) unsigned NOT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
   `note` tinyint(4) NOT NULL,
   PRIMARY KEY (`module_id`,`module`,`user_id`),
   KEY `module` (`module`),
@@ -979,10 +1243,10 @@ CREATE TABLE IF NOT EXISTS `nf_votes` (
 
 DROP TABLE IF EXISTS `nf_widgets`;
 CREATE TABLE IF NOT EXISTS `nf_widgets` (
-  `widget_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `widget_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `widget` varchar(100) NOT NULL,
   `type` varchar(100) NOT NULL,
-  `title` varchar(100) DEFAULT NULL,
+  `title` varchar(100) NULL DEFAULT NULL,
   `settings` text,
   PRIMARY KEY (`widget_id`),
   KEY `widget_name` (`widget`)
@@ -993,43 +1257,65 @@ CREATE TABLE IF NOT EXISTS `nf_widgets` (
 --
 
 INSERT INTO `nf_widgets` VALUES(1, 'talks', 'index', NULL, 'a:1:{s:7:"talk_id";s:1:"1";}');
-INSERT INTO `nf_widgets` VALUES(2, 'navigation', 'index', NULL, 'a:2:{s:5:"links";a:5:{i:0;a:2:{s:5:"title";s:7:"Accueil";s:3:"url";s:10:"index.html";}i:1;a:2:{s:5:"title";s:5:"Forum";s:3:"url";s:10:"forum.html";}i:2;a:2:{s:5:"title";s:7:"Equipes";s:3:"url";s:10:"teams.html";}i:3;a:2:{s:5:"title";s:7:"Membres";s:3:"url";s:12:"members.html";}i:4;a:2:{s:5:"title";s:7:"Contact";s:3:"url";s:12:"contact.html";}}s:7:"display";b:1;}');
-INSERT INTO `nf_widgets` VALUES(3, 'user', 'index_mini', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(6, 'forum', 'topics', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(7, 'news', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(8, 'members', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(9, 'breadcrumb', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(10, 'module', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(11, 'members', 'online', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(12, 'user', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(13, 'navigation', 'index', NULL, 'a:2:{s:5:"links";a:4:{i:0;a:2:{s:5:"title";s:8:"Facebook";s:3:"url";s:1:"#";}i:1;a:2:{s:5:"title";s:7:"Twitter";s:3:"url";s:1:"#";}i:2;a:2:{s:5:"title";s:6:"Origin";s:3:"url";s:1:"#";}i:3;a:2:{s:5:"title";s:5:"Steam";s:3:"url";s:1:"#";}}s:7:"display";b:1;}');
-INSERT INTO `nf_widgets` VALUES(14, 'members', 'online_mini', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(15, 'talks', 'index', NULL, 'a:1:{s:7:"talk_id";s:1:"2";}');
-INSERT INTO `nf_widgets` VALUES(16, 'news', 'categories', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(17, 'html', 'index', NULL, 'a:1:{s:7:"content";s:99:"[center]Propulsé par [url=http://www.neofrag.fr]NeoFrag CMS[/url]﻿ version Alpha 0.1﻿[/center]";}');
-INSERT INTO `nf_widgets` VALUES(20, 'navigation', 'index', NULL, 'a:2:{s:5:"links";a:6:{i:0;a:2:{s:5:"title";s:7:"Accueil";s:3:"url";s:10:"index.html";}i:1;a:2:{s:5:"title";s:17:"Actualit&eacute;s";s:3:"url";s:9:"news.html";}i:2;a:2:{s:5:"title";s:5:"Forum";s:3:"url";s:10:"forum.html";}i:3;a:2:{s:5:"title";s:14:"&Eacute;quipes";s:3:"url";s:10:"teams.html";}i:4;a:2:{s:5:"title";s:7:"Membres";s:3:"url";s:12:"members.html";}i:5;a:2:{s:5:"title";s:7:"Contact";s:3:"url";s:12:"contact.html";}}s:7:"display";b:1;}');
-INSERT INTO `nf_widgets` VALUES(21, 'user', 'index_mini', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(22, 'slider', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(23, 'breadcrumb', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(24, 'module', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(31, 'breadcrumb', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(2, 'breadcrumb', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(3, 'search', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(4, 'module', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(5, 'navigation', 'index', NULL, 'a:2:{s:7:"display";b:0;s:5:"links";a:4:{i:0;a:2:{s:5:"title";s:17:"Actualit&eacute;s";s:3:"url";s:9:"news.html";}i:1;a:2:{s:5:"title";s:7:"Membres";s:3:"url";s:12:"members.html";}i:2;a:2:{s:5:"title";s:10:"Rechercher";s:3:"url";s:11:"search.html";}i:3;a:2:{s:5:"title";s:7:"Contact";s:3:"url";s:12:"contact.html";}}}');
+INSERT INTO `nf_widgets` VALUES(6, 'partners', 'column', NULL, 'a:1:{s:13:"display_style";s:5:"light";}');
+INSERT INTO `nf_widgets` VALUES(7, 'user', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(8, 'news', 'categories', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(9, 'talks', 'index', NULL, 'a:1:{s:7:"talk_id";i:2;}');
+INSERT INTO `nf_widgets` VALUES(10, 'members', 'online', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(11, 'forum', 'topics', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(12, 'news', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(13, 'members', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(14, 'header', 'index', NULL, 'a:5:{s:5:"align";s:11:"text-center";s:5:"title";s:0:"";s:11:"description";s:0:"";s:11:"color-title";s:0:"";s:17:"color-description";s:7:"#DC351E";}');
+INSERT INTO `nf_widgets` VALUES(15, 'navigation', 'index', NULL, 'a:2:{s:7:"display";b:1;s:5:"links";a:6:{i:0;a:2:{s:5:"title";s:7:"Accueil";s:3:"url";s:10:"index.html";}i:1;a:2:{s:5:"title";s:5:"Forum";s:3:"url";s:10:"forum.html";}i:2;a:2:{s:5:"title";s:14:"&Eacute;quipes";s:3:"url";s:10:"teams.html";}i:3;a:2:{s:5:"title";s:6:"Photos";s:3:"url";s:12:"gallery.html";}i:4;a:2:{s:5:"title";s:11:"Partenaires";s:3:"url";s:13:"partners.html";}i:5;a:2:{s:5:"title";s:15:"Palmar&egrave;s";s:3:"url";s:11:"awards.html";}}}');
+INSERT INTO `nf_widgets` VALUES(16, 'user', 'index_mini', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(17, 'navigation', 'index', NULL, 'a:2:{s:7:"display";b:1;s:5:"links";a:4:{i:0;a:2:{s:5:"title";s:8:"Facebook";s:3:"url";s:1:"#";}i:1;a:2:{s:5:"title";s:7:"Twitter";s:3:"url";s:1:"#";}i:2;a:2:{s:5:"title";s:6:"Origin";s:3:"url";s:1:"#";}i:3;a:2:{s:5:"title";s:5:"Steam";s:3:"url";s:1:"#";}}}');
+INSERT INTO `nf_widgets` VALUES(18, 'members', 'online_mini', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(19, 'html', 'index', NULL, 'a:1:{s:7:"content";s:98:"[center]Propuls&eacute; par [url=https://neofr.ag]NeoFrag CMS[/url] version Alpha 0.1.5.3[/center]";}');
+INSERT INTO `nf_widgets` VALUES(20, 'header', 'index', NULL, 'a:5:{s:5:"align";s:11:"text-center";s:5:"title";s:0:"";s:11:"description";s:0:"";s:11:"color-title";s:0:"";s:17:"color-description";s:7:"#DC351E";}');
+INSERT INTO `nf_widgets` VALUES(21, 'navigation', 'index', NULL, 'a:2:{s:7:"display";b:1;s:5:"links";a:6:{i:0;a:2:{s:5:"title";s:7:"Accueil";s:3:"url";s:10:"index.html";}i:1;a:2:{s:5:"title";s:5:"Forum";s:3:"url";s:10:"forum.html";}i:2;a:2:{s:5:"title";s:14:"&Eacute;quipes";s:3:"url";s:10:"teams.html";}i:3;a:2:{s:5:"title";s:6:"Photos";s:3:"url";s:12:"gallery.html";}i:4;a:2:{s:5:"title";s:11:"Partenaires";s:3:"url";s:13:"partners.html";}i:5;a:2:{s:5:"title";s:15:"Palmar&egrave;s";s:3:"url";s:11:"awards.html";}}}');
+INSERT INTO `nf_widgets` VALUES(22, 'user', 'index_mini', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(23, 'slider', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(24, 'breadcrumb', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(25, 'search', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(26, 'module', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(27, 'breadcrumb', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(28, 'search', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(29, 'module', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(30, 'breadcrumb', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(31, 'search', 'index', NULL, NULL);
 INSERT INTO `nf_widgets` VALUES(32, 'module', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(37, 'breadcrumb', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(38, 'module', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(39, 'members', 'online', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(40, 'user', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(41, 'news', 'categories', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(42, 'talks', 'index', NULL, 'a:1:{s:7:"talk_id";s:1:"2";}');
-INSERT INTO `nf_widgets` VALUES(52, 'forum', 'statistics', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(53, 'forum', 'activity', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(54, 'header', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(55, 'header', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(58, 'breadcrumb', 'index', NULL, NULL);
-INSERT INTO `nf_widgets` VALUES(59, 'module', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(33, 'breadcrumb', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(34, 'module', 'index', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(35, 'forum', 'statistics', NULL, NULL);
+INSERT INTO `nf_widgets` VALUES(36, 'forum', 'activity', NULL, NULL);
 
 --
 -- Contraintes pour les tables exportées
 --
+
+--
+-- Contraintes pour la table `nf_access`
+--
+ALTER TABLE `nf_access`
+  ADD CONSTRAINT `nf_access_ibfk_1` FOREIGN KEY (`module`) REFERENCES `nf_settings_addons` (`name`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `nf_access_details`
+--
+ALTER TABLE `nf_access_details`
+  ADD CONSTRAINT `nf_access_details_ibfk_1` FOREIGN KEY (`access_id`) REFERENCES `nf_access` (`access_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `nf_awards`
+--
+ALTER TABLE `nf_awards`
+  ADD CONSTRAINT `nf_awards_ibfk_1` FOREIGN KEY (`team_id`) REFERENCES `nf_teams` (`team_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `nf_awards_ibfk_2` FOREIGN KEY (`game_id`) REFERENCES `nf_games` (`game_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `nf_awards_ibfk_3` FOREIGN KEY (`image_id`) REFERENCES `nf_files` (`file_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `nf_comments`
@@ -1093,6 +1379,43 @@ ALTER TABLE `nf_forum_url`
   ADD CONSTRAINT `nf_forum_url_ibfk_1` FOREIGN KEY (`forum_id`) REFERENCES `nf_forum` (`forum_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Contraintes pour la table `nf_gallery`
+--
+ALTER TABLE `nf_gallery`
+  ADD CONSTRAINT `nf_gallery_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `nf_gallery_categories` (`category_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `nf_gallery_ibfk_2` FOREIGN KEY (`image_id`) REFERENCES `nf_files` (`file_id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `nf_gallery_categories`
+--
+ALTER TABLE `nf_gallery_categories`
+  ADD CONSTRAINT `nf_gallery_categories_ibfk_1` FOREIGN KEY (`image_id`) REFERENCES `nf_files` (`file_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `nf_gallery_categories_ibfk_2` FOREIGN KEY (`icon_id`) REFERENCES `nf_files` (`file_id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `nf_gallery_categories_lang`
+--
+ALTER TABLE `nf_gallery_categories_lang`
+  ADD CONSTRAINT `nf_gallery_categories_lang_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `nf_gallery_categories` (`category_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `nf_gallery_categories_lang_ibfk_2` FOREIGN KEY (`lang`) REFERENCES `nf_settings_languages` (`code`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `nf_gallery_images`
+--
+ALTER TABLE `nf_gallery_images`
+  ADD CONSTRAINT `nf_gallery_images_ibfk_1` FOREIGN KEY (`file_id`) REFERENCES `nf_files` (`file_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `nf_gallery_images_ibfk_2` FOREIGN KEY (`gallery_id`) REFERENCES `nf_gallery` (`gallery_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `nf_gallery_images_ibfk_3` FOREIGN KEY (`thumbnail_file_id`) REFERENCES `nf_files` (`file_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `nf_gallery_images_ibfk_4` FOREIGN KEY (`original_file_id`) REFERENCES `nf_files` (`file_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `nf_gallery_lang`
+--
+ALTER TABLE `nf_gallery_lang`
+  ADD CONSTRAINT `nf_gallery_lang_ibfk_1` FOREIGN KEY (`gallery_id`) REFERENCES `nf_gallery` (`gallery_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `nf_gallery_lang_ibfk_2` FOREIGN KEY (`lang`) REFERENCES `nf_settings_languages` (`code`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Contraintes pour la table `nf_games`
 --
 ALTER TABLE `nf_games`
@@ -1113,6 +1436,19 @@ ALTER TABLE `nf_games_lang`
 ALTER TABLE `nf_groups_lang`
   ADD CONSTRAINT `nf_groups_lang_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `nf_groups` (`group_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `nf_groups_lang_ibfk_2` FOREIGN KEY (`lang`) REFERENCES `nf_settings_languages` (`code`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `nf_games_maps`
+--
+ALTER TABLE `nf_games_maps`
+  ADD CONSTRAINT `nf_games_maps_ibfk_1` FOREIGN KEY (`game_id`) REFERENCES `nf_games` (`game_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `nf_games_maps_ibfk_2` FOREIGN KEY (`image_id`) REFERENCES `nf_files` (`file_id`) ON DELETE SET NULL ON UPDATE SET NULL;
+
+--
+-- Contraintes pour la table `nf_games_modes`
+--
+ALTER TABLE `nf_games_modes`
+  ADD CONSTRAINT `nf_games_modes_ibfk_1` FOREIGN KEY (`game_id`) REFERENCES `nf_games` (`game_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `nf_news`
@@ -1151,16 +1487,18 @@ ALTER TABLE `nf_pages_lang`
   ADD CONSTRAINT `nf_pages_lang_ibfk_2` FOREIGN KEY (`lang`) REFERENCES `nf_settings_languages` (`code`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `nf_permissions`
+-- Contraintes pour la table `nf_partners`
 --
-ALTER TABLE `nf_permissions`
-  ADD CONSTRAINT `nf_permissions_ibfk_1` FOREIGN KEY (`addon`) REFERENCES `nf_settings_addons` (`name`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `nf_partners`
+  ADD CONSTRAINT `nf_partners_ibfk_1` FOREIGN KEY (`logo_light`) REFERENCES `nf_files` (`file_id`) ON DELETE SET NULL ON UPDATE SET NULL,
+  ADD CONSTRAINT `nf_partners_ibfk_2` FOREIGN KEY (`logo_dark`) REFERENCES `nf_files` (`file_id`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
--- Contraintes pour la table `nf_permissions_details`
+-- Contraintes pour la table `nf_partners_lang`
 --
-ALTER TABLE `nf_permissions_details`
-  ADD CONSTRAINT `nf_permissions_details_ibfk_1` FOREIGN KEY (`permission_id`) REFERENCES `nf_permissions` (`permission_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `nf_partners_lang`
+  ADD CONSTRAINT `nf_partners_lang_ibfk_1` FOREIGN KEY (`partner_id`) REFERENCES `nf_partners` (`partner_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `nf_partners_lang_ibfk_2` FOREIGN KEY (`lang`) REFERENCES `nf_settings_languages` (`code`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `nf_sessions`
@@ -1222,7 +1560,8 @@ ALTER TABLE `nf_users_keys`
 -- Contraintes pour la table `nf_users_messages`
 --
 ALTER TABLE `nf_users_messages`
-  ADD CONSTRAINT `nf_users_messages_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `nf_users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `nf_users_messages_ibfk_1` FOREIGN KEY (`reply_id`) REFERENCES `nf_users_messages_replies` (`reply_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `nf_users_messages_ibfk_2` FOREIGN KEY (`last_reply_id`) REFERENCES `nf_users_messages_replies` (`reply_id`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Contraintes pour la table `nf_users_messages_recipients`

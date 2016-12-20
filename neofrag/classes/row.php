@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -21,7 +21,7 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 class Row
 {
 	public $style;
-	public $cols = array();
+	public $cols = [];
 	
 	public function __construct()
 	{
@@ -48,24 +48,24 @@ class Row
 	{
 		$output = '';
 		
-		if ($live_editor = NeoFrag::live_editor() & NeoFrag::ROWS && !is_null($id))
+		if ($live_editor = NeoFrag::live_editor() & NeoFrag::ROWS && $id !== NULL)
 		{
 			$output .= '<div class="live-editor-row-header">
 							<div class="btn-group">
-								<button type="button" class="btn btn-sm btn-info live-editor-style" data-toggle="tooltip" title="Apparence"><i class="fa fa-paint-brush"></i></button>
-								<button type="button" class="btn btn-sm btn-danger live-editor-delete" data-toggle="tooltip" title="Supprimer"><i class="fa fa-close"></i></button>
+								<button type="button" class="btn btn-sm btn-info live-editor-style" data-toggle="tooltip" data-container="body" title="'.NeoFrag::loader()->lang('design').'">'.icon('fa-paint-brush').'</button>
+								<button type="button" class="btn btn-sm btn-danger live-editor-delete" data-toggle="tooltip" data-container="body" title="'.NeoFrag::loader()->lang('remove').'">'.icon('fa-close').'</button>
 							</div>
-							<h3>Row <div class="btn-group"><button type="button" class="btn btn-xs btn-success live-editor-add-col" data-toggle="tooltip" title="Nouveau Col"><i class="fa fa-plus"></i></button></div></h3>
+							<h3>'.NeoFrag::loader()->lang('row').' <div class="btn-group"><button type="button" class="btn btn-xs btn-success live-editor-add-col" data-toggle="tooltip" data-container="body" title="'.NeoFrag::loader()->lang('new_col').'">'.icon('fa-plus').'</button></div></h3>
 						</div>';
 		}
 		
-		$cols = array();
+		$cols = [];
 		foreach ($this->cols as $i => $col)
 		{
-			$cols[] = $col->display(!is_null($id) ? $i : NULL);
+			$cols[] = $col->display($id !== NULL ? $i : NULL);
 		}
 		
-		$output .= '<div class="row'.(!empty($this->style) ? ' '.$this->style.($live_editor ? '" data-original-style="'.$this->style : '') : '').'"'.(!is_null($id) ? ' data-row-id="'.$id.'"' : '').'>
+		$output .= '<div class="row'.(!empty($this->style) ? ' '.$this->style.($live_editor ? '" data-original-style="'.$this->style : '') : '').'"'.($id !== NULL ? ' data-row-id="'.$id.'"' : '').'>
 						'.implode($cols).'
 					</div>';
 	
@@ -74,6 +74,6 @@ class Row
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/classes/row.php
 */

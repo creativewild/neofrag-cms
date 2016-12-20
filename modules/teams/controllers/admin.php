@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,94 +20,113 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class m_teams_c_admin extends Controller_Module
 {
-	public function index($teams)
+	public function index()
 	{
-		$this	->title('Équipe')
-				->subtitle('Liste des équipes')
-				->load->library('table');
+		$this->subtitle($this('list_teams'));
 
 		$teams = $this	->table
-						->add_columns(array(
-							array(
-								'title'   => 'Équipe',
-								'content' => '<a href="{base_url}teams/{team_id}/{name}.html"><img src="{image {icon_id}}" alt="" /> {title}</a>',
-								'sort'    => '{title}',
-								'search'  => '{title}'
-							),
-							array(
-								'title'   => 'Jeu',
-								'content' => '<a href="{base_url}admin/games/{game_id}/{game}.html"><img src="{image {game_icon}}" alt="" /> {game_title}</a>',
-								'sort'    => '{game_title}',
-								'search'  => '{game_title}'
-							),
-							array(
-								'title'   => '<i class="fa fa-users" data-toggle="tooltip" title="Joueurs"></i>',
-								'content' => '{users}',
+						->add_columns([
+							[
+								'content' => function($data){
+									return button_sort($data['team_id'], 'admin/ajax/teams/sort.html');
+								},
 								'size'    => TRUE
-							),
-							array(
-								'content' => array(
-									button_edit('{base_url}admin/teams/{team_id}/{name}.html'),
-									button_delete('{base_url}admin/teams/delete/{team_id}/{name}.html')
-								),
+							],
+							[
+								'title'   => $this('teams'),
+								'content' => function($data){
+									return '<a href="'.url('teams/'.$data['team_id'].'/'.$data['name'].'.html').'"><img src="'.path($data['icon_id']).'" alt="" /> '.$data['title'].'</a>';
+								}
+							],
+							[
+								'title'   => $this('game'),
+								'content' => function($data){
+									return '<a href="'.url('admin/games/'.$data['team_id'].'/'.$data['game'].'.html').'"><img src="'.path($data['game_icon']).'" alt="" /> '.$data['game_title'].'</a>';
+								}
+							],
+							[
+								'title'   => '<i class="fa fa-users" data-toggle="tooltip" title="'.$this('players').'"></i>',
+								'content' => function($data){
+									return $data['users'];
+								},
 								'size'    => TRUE
-							)
-						))
-						->sort_by(1, SORT_ASC)
-						->data($teams)
-						->no_data('Il n\'y a pas encore d\'équipe')
+							],
+							[
+								'content' => [
+									function($data){
+										return button_edit('admin/teams/'.$data['team_id'].'/'.$data['name'].'.html');
+									},
+									function($data){
+										return button_delete('admin/teams/delete/'.$data['team_id'].'/'.$data['name'].'.html');
+									}
+								],
+								'size'    => TRUE
+							]
+						])
+						->data($this->model()->get_teams())
+						->no_data($this('no_team'))
 						->display();
 			
 		$roles = $this	->table
-							->add_columns(array(
-								array(
-									'content' => '<a href="{base_url}admin/teams/roles/{role_id}/{url_title(title)}.html">{title}</a>',
-									'search'  => '{title}',
-									'sort'    => '{title}'
-								),
-								array(
-									'content' => array(
-										button_edit('{base_url}admin/teams/roles/{role_id}/{url_title(title)}.html'),
-										button_delete('{base_url}admin/teams/roles/delete/{role_id}/{url_title(title)}.html')
-									),
+							->add_columns([
+								[
+									'content' => function($data){
+										return button_sort($data['role_id'], 'admin/ajax/teams/roles/sort.html');
+									},
 									'size'    => TRUE
-								)
-							))
+								],
+								[
+									'content' => function($data){
+										return '<a href="'.url('admin/teams/roles/'.$data['role_id'].'/'.url_title($data['title']).'.html').'">'.$data['title'].'</a>';
+									}
+								],
+								[
+									'content' => [
+										function($data){
+											return button_edit('admin/teams/roles/'.$data['role_id'].'/'.url_title($data['title']).'.html');
+										},
+										function($data){
+											return button_delete('admin/teams/roles/delete/'.$data['role_id'].'/'.url_title($data['title']).'.html');
+										}
+									],
+									'size'    => TRUE
+								]
+							])
 							->pagination(FALSE)
 							->data($this->model('roles')->get_roles())
-							->no_data('Aucun rôle')
+							->no_data($this('no_role'))
 							->display();
 		
 		return new Row(
 			new Col(
-				new Panel(array(
-					'title'   => 'rôles',
+				new Panel([
+					'title'   => $this('roles'),
 					'icon'    => 'fa-sitemap',
 					'content' => $roles,
-					'footer'  => '<a class="btn btn-outline btn-success" href="{base_url}admin/teams/roles/add.html"><i class="fa fa-plus"></i> Ajouter un rôle</a>',
+					'footer'  => button_add('admin/teams/roles/add.html', $this('add_role')),
 					'size'    => 'col-md-12 col-lg-4'
-				))
+				])
 			),
 			new Col(
-				new Panel(array(
-					'title'   => 'Liste des équipes',
+				new Panel([
+					'title'   => $this('list_teams'),
 					'icon'    => 'fa-gamepad',
 					'content' => $teams,
-					'footer'  => '<a class="btn btn-outline btn-success" href="{base_url}admin/teams/add.html"><i class="fa fa-plus"></i> Ajouter une équipe</a>',
+					'footer'  => button_add('admin/teams/add.html', $this('add_team')),
 					'size'    => 'col-md-12 col-lg-8'
-				))
+				])
 			)
 		);
 	}
 	
 	public function add()
 	{
-		$this	->subtitle('Ajouter une équipe')
-				->load->library('form')
-				->add_rules('teams', array(
+		$this	->subtitle($this('add_team'))
+				->form
+				->add_rules('teams', [
 					'games' => $this->model()->get_games_list()
-				))
-				->add_submit('Ajouter')
+				])
+				->add_submit($this('add'))
 				->add_back('admin/teams.html');
 
 		if ($this->form->is_valid($post))
@@ -118,16 +137,16 @@ class m_teams_c_admin extends Controller_Module
 													$post['icon'],
 													$post['description']);
 
-			add_alert('Succes', 'team ajouté');
+			notify($this('add_team_success_message'));
 
 			redirect('admin/teams/'.$team_id.'/'.url_title($post['title']).'.html');
 		}
 
-		return new Panel(array(
-			'title'   => 'Ajouter une équipe',
+		return new Panel([
+			'title'   => $this('add_team'),
 			'icon'    => 'fa-gamepad',
 			'content' => $this->form->display()
-		));
+		]);
 	}
 
 	public function _edit($team_id, $name, $title, $image_id, $icon_id, $description, $game_id)
@@ -135,47 +154,45 @@ class m_teams_c_admin extends Controller_Module
 		$users = $this->db	->select('u.user_id', 'u.username', 'tu.user_id IS NOT NULL AS in_team')
 							->from('nf_users u')
 							->join('nf_teams_users tu', 'tu.user_id = u.user_id AND tu.team_id = '.$team_id)
+							->join('nf_teams_roles r',  'r.role_id  = tu.role_id')
 							->where('u.deleted', FALSE)
-							->order_by('u.username')
+							->order_by('r.order', 'r.role_id', 'u.username')
 							->get();
 		
-		$roles = $this->db	->select('role_id', 'title')
-							->from('nf_teams_roles')
-							->order_by('title')
-							->get();
+		$roles = $this->model('roles')->get_roles();
 		
-		$form_team = $this	->title('&Eacute;dition')
+		$form_team = $this	->title($this('edit_team'))
 							->subtitle($title)
-							->load->library('form')
-							->add_rules('teams', array(
+							->form
+							->add_rules('teams', [
 								'title'        => $title,
 								'game_id'      => $game_id,
 								'games'        => $this->model()->get_games_list(),
 								'image_id'     => $image_id,
 								'icon_id'      => $icon_id,
 								'description'  => $description
-							))
-							->add_submit('Éditer')
+							])
+							->add_submit($this('edit'))
 							->add_back('admin/teams.html')
 							->save();
 		
 		$form_users = $this	->form
-							->add_rules(array(
-								'user_id' => array(
+							->add_rules([
+								'user_id' => [
 									'type'   => 'select',
 									'values' => array_filter(array_map(function($a){
 										return !$a['in_team'] ? $a['user_id'] : NULL;
 									}, $users)),
 									'rules'  => 'required'
-								),
-								'role_id' => array(
+								],
+								'role_id' => [
 									'type'   => 'select',
 									'values' => array_map(function($a){
 										return $a['role_id'];
 									}, $roles),
 									'rules'  => 'required'
-								)
-							))
+								]
+							])
 							->save();
 
 		if ($form_team->is_valid($post))
@@ -187,73 +204,77 @@ class m_teams_c_admin extends Controller_Module
 										$post['icon'],
 										$post['description']);
 
-			add_alert('Succes', 'team éditée');
+			notify($this('edit_team_success_message'));
 
 			redirect_back('admin/teams.html');
 		}
 		else if ($form_users->is_valid($post))
 		{
-			$this->db->insert('nf_teams_users', array(
+			$this->db->insert('nf_teams_users', [
 				'team_id' => $team_id,
 				'user_id' => $post['user_id'],
 				'role_id' => $post['role_id']
-			));
+			]);
 			
 			refresh();
 		}
 		
-		$this	->load->library('table')
-				->add_columns(array(
-					array(
+		$this	->table
+				->add_columns([
+					[
 						'content' => function($data){
 							return NeoFrag::loader()->user->link($data['user_id'], $data['username']);
 						},
-					),
-					array(
-						'content' => '{title}',
-					),
-					array(
-						'content' => array(
-							button_delete('{base_url}admin/teams/players/delete/'.$team_id.'/'.$name.'/{user_id}.html')
-						),
+					],
+					[
+						'content' => function($data){
+							return $data['title'];
+						},
+					],
+					[
+						'content' => [
+							function($data) use ($team_id, $name){
+								return button_delete('admin/teams/players/delete/'.$team_id.'/'.$name.'/'.$data['user_id'].'.html');
+							}
+						],
 						'size'    => TRUE
-					)
-				))
+					]
+				])
 				->pagination(FALSE)
-				->data($this->db->select('tu.user_id', 'u.username', 'r.title')->from('nf_teams_users tu')->join('nf_users u', 'u.user_id = tu.user_id')->join('nf_teams_roles r', 'r.role_id = tu.role_id')->where('tu.team_id', $team_id)->order_by('r.title', 'u.username')->get())
-				->no_data('Il n\'y a pas encore de joueur dans cette équipe');
+				->data($this->db->select('tu.user_id', 'u.username', 'r.title')->from('nf_teams_users tu')->join('nf_users u', 'u.user_id = tu.user_id AND u.deleted = "0"', 'INNER')->join('nf_teams_roles r', 'r.role_id = tu.role_id')->where('tu.team_id', $team_id)->order_by('r.title', 'u.username')->get())
+				->no_data($this('no_players_on_team'));
 		
 		return new Row(
 			new Col(
-				new Panel(array(
-					'title'   => 'Éditer l\'équipe',
+				new Panel([
+					'title'   => $this('edit_team'),
 					'icon'    => 'fa-gamepad',
 					'content' => $form_team->display(),
 					'size'    => 'col-md-12 col-lg-7'
-				))
+				])
 			),
 			new Col(
-				new Panel(array(
-					'title'   => 'Joueurs',
+				new Panel([
+					'title'   => $this('players'),
 					'icon'    => 'fa-users',
 					'content' => $this->table->display(),
-					'footer'  => $this->load->view('users', array(
+					'footer'  => $this->load->view('users', [
 						'users'   => $users,
 						'roles'   => $roles,
-						'form_id' => $form_users->id
-					)),
+						'form_id' => $form_users->token()
+					]),
 					'size'    => 'col-md-12 col-lg-5'
-				))
+				])
 			)
 		);
 	}
 
 	public function delete($team_id, $title)
 	{
-		$this	->title('Suppression équipe')
+		$this	->title($this('delete_team'))
 				->subtitle($title)
-				->load->library('form')
-				->confirm_deletion('Confirmation de suppression', 'Êtes-vous sûr(e) de vouloir supprimer l\'équipe <b>'.$title.'</b> ?');
+				->form
+				->confirm_deletion($this('delete_confirmation'), $this('delete_team_message', $title));
 
 		if ($this->form->is_valid())
 		{
@@ -267,60 +288,60 @@ class m_teams_c_admin extends Controller_Module
 	
 	public function _roles_add()
 	{
-		$this	->subtitle('Ajouter un rôle')
-				->load->library('form')
+		$this	->subtitle($this('add_role'))
+				->form
 				->add_rules('roles')
 				->add_back('admin/teams.html')
-				->add_submit('Ajouter');
+				->add_submit($this('add'));
 
 		if ($this->form->is_valid($post))
 		{
 			$this->model('roles')->add_role($post['title']);
 
-			add_alert('Succes', 'rôle ajouté');
+			notify($this('add_role_success_message'));
 
 			redirect_back('admin/teams.html');
 		}
 		
-		return new Panel(array(
-			'title'   => 'Ajouter un rôle',
+		return new Panel([
+			'title'   => $this('add_role'),
 			'icon'    => 'fa-sitemap',
 			'content' => $this->form->display()
-		));
+		]);
 	}
 	
 	public function _roles_edit($role_id, $title)
 	{
-		$this	->subtitle('Rôle '.$title)
-				->load->library('form')
-				->add_rules('roles', array(
+		$this	->subtitle($this('role_', $title))
+				->form
+				->add_rules('roles', [
 					'title' => $title
-				))
-				->add_submit('Éditer')
+				])
+				->add_submit($this('edit'))
 				->add_back('admin/teams.html');
 		
 		if ($this->form->is_valid($post))
 		{
 			$this->model('roles')->edit_role($role_id, $post['title']);
 		
-			add_alert('Succes', 'Rôle édité avec succès');
+			notify($this('edit_role_success_message'));
 
 			redirect_back('admin/teams.html');
 		}
 		
-		return new Panel(array(
-			'title'   => 'Éditer le rôle',
+		return new Panel([
+			'title'   => $this('edit_role'),
 			'icon'    => 'fa-sitemap',
 			'content' => $this->form->display()
-		));
+		]);
 	}
 	
 	public function _roles_delete($role_id, $title)
 	{
-		$this	->title('Suppression rôle')
+		$this	->title($this('delete_role'))
 				->subtitle($title)
-				->load->library('form')
-				->confirm_deletion('Confirmation de suppression', 'Êtes-vous sûr(e) de vouloir supprimer le rôle <b>'.$title.'</b> ?');
+				->form
+				->confirm_deletion($this('delete_confirmation'), $this('delete_role_message', $title));
 				
 		if ($this->form->is_valid())
 		{
@@ -334,10 +355,10 @@ class m_teams_c_admin extends Controller_Module
 	
 	public function _players_delete($team_id, $user_id, $username)
 	{
-		$this	->title('Suppression joueur')
+		$this	->title($this('delete_player'))
 				->subtitle($title)
-				->load->library('form')
-				->confirm_deletion('Confirmation de suppression', 'Êtes-vous sûr(e) de vouloir supprimer le joueur <b>'.$username.'</b> de cette équipe ?');
+				->form
+				->confirm_deletion($this('delete_confirmation'), $this('delete_player_message', $username));
 				
 		if ($this->form->is_valid())
 		{
@@ -353,6 +374,6 @@ class m_teams_c_admin extends Controller_Module
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.2
 ./modules/teams/controllers/admin.php
 */

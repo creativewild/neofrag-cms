@@ -11,65 +11,133 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-abstract class Theme extends NeoFrag
+abstract class Theme extends Loadable
 {
-	private $_theme_name;
+	static public $core = [
+		'admin'   => FALSE,
+		'default' => TRUE
+	];
 
-	public $name;
-	public $description;
-	public $link;
-	public $author;
-	public $licence;
-	public $version;
-	public $nf_version;
-	public $styles;
-	
 	abstract public function styles_row();
 	abstract public function styles_widget();
 
-	public function __construct($theme_name)
+	public $styles;
+	
+	public function paths()
 	{
-		$this->load = new Loader(
-			array(
-				'assets' => array(
-					'./overrides/themes/'.$theme_name,
-					'./neofrag/themes/'.$theme_name,
-					'./themes/'.$theme_name
-				),
-				'lang' => array(
-					'./overrides/themes/'.$theme_name.'/lang',
-					'./neofrag/themes/'.$theme_name.'/lang',
-					'./themes/'.$theme_name.'/lang'
-				),
-				'views' => array(
-					'./overrides/themes/'.$theme_name.'/views',
-					'./neofrag/themes/'.$theme_name.'/views',
-					'./themes/'.$theme_name.'/overrides/views',
-					'./themes/'.$theme_name.'/views'
-				)
-			),
-			NeoFrag::loader()
-		);
-
-		$this->_theme_name = $theme_name;
-
-		$this->set_path();
+		return [
+			'assets' => [
+				'overrides/themes/'.$this->name,
+				'neofrag/themes/'.$this->name,
+				'themes/'.$this->name
+			],
+			'controllers' => [
+				'overrides/themes/'.$this->name.'/controllers',
+				'neofrag/themes/'.$this->name.'/controllers',
+				'themes/'.$this->name.'/controllers'
+			],
+			'forms' => [
+				'overrides/themes/'.$this->name.'/forms',
+				'neofrag/themes/'.$this->name.'/forms',
+				'themes/'.$this->name.'/forms'
+			],
+			'helpers' => [
+				'overrides/themes/'.$this->name.'/helpers',
+				'neofrag/themes/'.$this->name.'/helpers',
+				'themes/'.$this->name.'/helpers'
+			],
+			'lang' => [
+				'overrides/themes/'.$this->name.'/lang',
+				'neofrag/themes/'.$this->name.'/lang',
+				'themes/'.$this->name.'/lang'
+			],
+			'libraries' => [
+				'overrides/themes/'.$this->name.'/libraries',
+				'neofrag/themes/'.$this->name.'/libraries',
+				'themes/'.$this->name.'/libraries'
+			],
+			'models' => [
+				'overrides/themes/'.$this->name.'/models',
+				'neofrag/themes/'.$this->name.'/models',
+				'themes/'.$this->name.'/models'
+			],
+			'views' => [
+				'overrides/themes/'.$this->name.'/views',
+				'neofrag/themes/'.$this->name.'/views',
+				'themes/'.$this->name.'/overrides/views',
+				'themes/'.$this->name.'/views'
+			]
+		];
 	}
-
-	public function get_name()
+	
+	public function load()
 	{
-		return $this->_theme_name;
+		if ($this->name != 'default')
+		{
+			array_unshift(NeoFrag::loader()->paths['assets'], 'themes/'.$this->name);
+			array_unshift(NeoFrag::loader()->paths['views'],  'themes/'.$this->name.'/overrides/views', 'themes/'.$this->name.'/views');
+		}
+		
+		return $this;
+	}
+	
+	public function install($dispositions = [])
+	{
+		foreach ($dispositions as $page => $dispositions)
+		{
+			foreach ($dispositions as $zone => $disposition)
+			{
+				$this->db->insert('nf_dispositions', [
+					'theme'       => $this->name,
+					'page'        => $page,
+					'zone'        => array_search($zone, $this->zones),
+					'disposition' => serialize($disposition)
+				]);
+			}
+		}
+
+		return parent::install();
+	}
+	
+	public function uninstall($remove = TRUE)
+	{
+		$widgets = [];
+		
+		foreach ($this->db->select('disposition')->from('nf_dispositions')->where('theme', $this->name)->get() as $disposition)
+		{
+			foreach (unserialize($disposition) as $rows)
+			{
+				foreach ($rows->cols as $col)
+				{
+					foreach ($col->widgets as $widget)
+					{
+						$widgets[] = $widget->widget_id;
+					}
+				}
+			}
+		}
+		
+		$this->db	->where('theme', $this->name)
+					->delete('nf_dispositions');
+		
+		if ($widgets)
+		{
+			$this->db	->where('widget_id', $widgets)
+						->delete('nf_widgets');
+		}
+		
+		return parent::uninstall($remove);
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.2
 ./neofrag/classes/theme.php
 */

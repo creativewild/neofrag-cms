@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,25 +22,29 @@ function display($objects, $id = NULL)
 {
 	$output = '';
 	
-	if (is_object($objects) && is_a($objects, 'Panel'))
+	if (!NeoFrag::loader()->config->ajax_url)
 	{
-		$objects = array(
-			new Row(
-				new Col($objects)
-			)
-		);
+		if (is_object($objects) && is_a($objects, 'Panel'))
+		{
+			$objects = new Col($objects);
+		}
 		
+		if (is_object($objects) && is_a($objects, 'Col'))
+		{
+			$objects = new Row($objects);
+		}
 	}
-	else if (is_object($objects) && is_a($objects, 'Row'))
+	
+	if (!is_array($objects))
 	{
-		$objects = array($objects);
+		$objects = [$objects];
 	}
 	
 	foreach ($objects as $i => $object)
 	{
 		if (is_object($object))
 		{
-			$output .= $object->display(!is_null($id) ? $i : NULL);
+			$output .= $object->display($id !== NULL ? $i : NULL);
 		}
 		else
 		{
@@ -51,7 +55,37 @@ function display($objects, $id = NULL)
 	return $output;
 }
 
+function output($type)
+{
+	if (in_array($type, ['css', 'js', 'js_load']) && !empty(NeoFrag::loader()->{$type}))
+	{
+		if ($type == 'css')
+		{
+			if ($v = (int)NeoFrag::loader()->config->nf_version_css)
+			{
+				$v = '?v='.$v;
+			}
+
+			$output = array_map(function($a) use ($v){
+				return '<link rel="stylesheet" href="'.path($a[0].'.css', 'css', $a[2]['assets']).($v ?: '').'" type="text/css" media="'.$a[1].'" />';
+			}, NeoFrag::loader()->css);
+		}
+		else if ($type == 'js')
+		{
+			$output = array_map(function($a){
+				return '<script type="text/javascript" src="'.path($a[0].'.js', 'js', $a[1]['assets']).'"></script>';
+			}, NeoFrag::loader()->js);
+		}
+		else if ($type == 'js_load')
+		{
+			$output = NeoFrag::loader()->js_load;
+		}
+
+		return implode("\r\n", array_unique($output));
+	}
+}
+
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/helpers/output.php
 */

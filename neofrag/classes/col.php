@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,19 +22,28 @@ class Col
 {
 	private $_size = 'col-md-12';
 	
-	public  $widgets = array();
+	public  $widgets = [];
 	
 	public function __construct()
 	{
-		foreach (func_get_args() as $widget)
+		$this->_init(func_get_args());
+	}
+	
+	private function _init($args)
+	{
+		foreach ($args as $widget)
 		{
-			if (is_a($widget, 'Widget_View') || is_a($widget, 'Panel'))
+			if (is_array($widget))
 			{
-				$this->widgets[] = $widget;
+				$this->_init($widget);
 			}
 			else if (is_string($widget))
 			{
 				$this->_size = $widget;
+			}
+			else if ($widget !== NULL)
+			{
+				$this->widgets[] = $widget;
 			}
 		}
 	}
@@ -62,27 +71,27 @@ class Col
 				$this->_size = $widget->size;
 			}
 			
-			$output .= $widget->display(!is_null($id) ? $i : NULL);
+			$output .= $widget->display($id !== NULL ? $i : NULL);
 		}
 		
-		if (NeoFrag::live_editor() & NeoFrag::COLS && !is_null($id))
+		if (NeoFrag::live_editor() & NeoFrag::COLS && $id !== NULL)
 		{
 			$output = '<div class="live-editor-col">
 							<div class="btn-group">
-								<button type="button" class="btn btn-sm btn-default live-editor-size" data-size="-1" data-toggle="tooltip" title="Réduire"><i class="fa fa-compress fa-rotate-45"></i></button>
-								<button type="button" class="btn btn-sm btn-default live-editor-size" data-size="1" data-toggle="tooltip" title="Augmenter"><i class="fa fa-expand fa-rotate-45"></i></button>
-								<button type="button" class="btn btn-sm btn-danger live-editor-delete" data-toggle="tooltip" title="Supprimer"><i class="fa fa-close"></i></button>
+								<button type="button" class="btn btn-sm btn-default live-editor-size" data-size="-1" data-toggle="tooltip" data-container="body" title="'.NeoFrag::loader()->lang('reduce').'">'.icon('fa-compress fa-rotate-45').'</button>
+								<button type="button" class="btn btn-sm btn-default live-editor-size" data-size="1" data-toggle="tooltip" data-container="body" title="'.NeoFrag::loader()->lang('increase').'">'.icon('fa-expand fa-rotate-45').'</button>
+								<button type="button" class="btn btn-sm btn-danger live-editor-delete" data-toggle="tooltip" data-container="body" title="'.NeoFrag::loader()->lang('remove').'">'.icon('fa-close').'</button>
 							</div>
-							<h3>Col <div class="btn-group"><button type="button" class="btn btn-xs btn-success live-editor-add-widget" data-toggle="tooltip" title="Nouveau Widget"><i class="fa fa-plus"></i></button></div></h3>
+							<h3>'.NeoFrag::loader()->lang('col').' <div class="btn-group"><button type="button" class="btn btn-xs btn-success live-editor-add-widget" data-toggle="tooltip" data-container="body" title="'.NeoFrag::loader()->lang('new_widget').'">'.icon('fa-plus').'</button></div></h3>
 							'.$output.'
 						</div>';
 		}
 		
-		return '<div class="'.$this->_size.'"'.(!is_null($id) ? ' data-col-id="'.$id.'"' : '').'>'.$output.'</div>';
+		return '<div class="'.$this->_size.'"'.($id !== NULL ? ' data-col-id="'.$id.'"' : '').'>'.$output.'</div>';
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/classes/col.php
 */

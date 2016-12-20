@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,73 +22,87 @@ class m_news_c_admin_checker extends Controller_Module
 {
 	public function index($page = '')
 	{
-		return array($this->load->library('pagination')->get_data($this->model()->get_news(), $page));
+		return [$this->pagination->get_data($this->model()->get_news(), $page)];
+	}
+	
+	public function _add()
+	{
+		if (!$this->is_authorized('add_news'))
+		{
+			throw new Exception(NeoFrag::UNAUTHORIZED);
+		}
+		
+		return [];
 	}
 
 	public function _edit($news_id, $title, $tab = 'default')
 	{
+		if (!$this->is_authorized('modify_news'))
+		{
+			throw new Exception(NeoFrag::UNAUTHORIZED);
+		}
+		
 		if ($news = $this->model()->check_news($news_id, $title, $tab))
 		{
-			return $news + array($tab);
-		}
-		else
-		{
-			throw new Exception(NeoFrag::UNFOUND);
+			return $news + [$tab];
 		}
 	}
 
 	public function delete($news_id, $title)
 	{
-		if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest')
+		if (!$this->is_authorized('delete_news'))
 		{
-			$this->ajax();
+			throw new Exception(NeoFrag::UNAUTHORIZED);
 		}
+
+		$this->ajax();
 
 		if ($news = $this->model()->check_news($news_id, $title))
 		{
-			return array($news['news_id'], $news['title']);
+			return [$news['news_id'], $news['title']];
 		}
-		else if ($this->config->ajax_url)
-		{
-			return '<h4 class="alert-heading">Erreur</h4>Cette actualité a déjà été supprimée.';
-		}
-
-		throw new Exception(NeoFrag::UNFOUND);
 	}
 	
+	public function _categories_add()
+	{
+		if (!$this->is_authorized('add_news_categories'))
+		{
+			throw new Exception(NeoFrag::UNAUTHORIZED);
+		}
+		
+		return [];
+	}
+
 	public function _categories_edit($category_id, $name)
 	{
+		if (!$this->is_authorized('modify_news_categories'))
+		{
+			throw new Exception(NeoFrag::UNAUTHORIZED);
+		}
+
 		if ($category = $this->model('categories')->check_category($category_id, $name, 'default'))
 		{
 			return $category;
-		}
-		else
-		{
-			throw new Exception(NeoFrag::UNFOUND);
 		}
 	}
 	
 	public function _categories_delete($category_id, $name)
 	{
-		if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest')
+		if (!$this->is_authorized('delete_news_categories'))
 		{
-			$this->ajax();
+			throw new Exception(NeoFrag::UNAUTHORIZED);
 		}
+
+		$this->ajax();
 
 		if ($category = $this->model('categories')->check_category($category_id, $name, 'default'))
 		{
-			return array($category_id, $category['title']);
+			return [$category_id, $category['title']];
 		}
-		else if ($this->config->ajax_url)
-		{
-			return '<h4 class="alert-heading">Erreur</h4>Cette catégorie a déjà été supprimée.';
-		}
-
-		throw new Exception(NeoFrag::UNFOUND);
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./modules/news/controllers/admin_checker.php
 */

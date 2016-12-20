@@ -11,128 +11,179 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-function include_class($file)
+function check_file($dir, $force = FALSE)
 {
-	require_once $file;
-
-	if (file_exists($overide = str_replace('./neofrag/', './overrides/', $file)))
+	if ($dir === '')
 	{
-		require_once $overide;
+		return FALSE;
 	}
+
+	static $cache;
+
+	if (!isset($cache[$dir]) || $force)
+	{
+		$dirs = explode('/', $dir);
+
+		$exists = TRUE;
+
+		foreach (array_keys($dirs) as $i)
+		{
+			if (!isset($cache[$path = implode('/', array_slice($dirs, 0, $i + 1))]) || $force)
+			{
+				$cache[$path] = $exists ? file_exists($path) : FALSE;
+			}
+			
+			$exists = $cache[$path];
+		}
+	}
+
+	return $cache[$dir];
 }
 
 ob_start();
 
 define('NEOFRAG_CMS',     dirname(__FILE__));
-define('NEOFRAG_MEMORY',  memory_get_usage(TRUE));
+define('NEOFRAG_MEMORY',  memory_get_peak_usage());
 define('NEOFRAG_TIME',    microtime(TRUE));
-define('NEOFRAG_VERSION', 'Alpha 0.1');
+define('NEOFRAG_VERSION', 'Alpha 0.1.5.3');
 
 ini_set('default_charset', 'UTF8');
 ini_set('mbstring.func_overload', 7);
 mb_regex_encoding('UTF-8');
 mb_internal_encoding('UTF-8');
 
-//Appel des classes de base
-include_class('./neofrag/classes/neofrag.php');
-include_class('./neofrag/classes/library.php');
-include_class('./neofrag/classes/controller.php');
-include_class('./neofrag/classes/controller_module.php');
-include_class('./neofrag/classes/controller_widget.php');
-include_class('./neofrag/classes/core.php');
-include_class('./neofrag/classes/zone.php');
-include_class('./neofrag/classes/row.php');
-include_class('./neofrag/classes/col.php');
-include_class('./neofrag/classes/panel.php');
-include_class('./neofrag/classes/panel_box.php');
-include_class('./neofrag/classes/button_back.php');
-include_class('./neofrag/classes/driver.php');
-include_class('./neofrag/classes/model.php');
-include_class('./neofrag/classes/module.php');
-include_class('./neofrag/classes/theme.php');
-include_class('./neofrag/classes/widget.php');
-include_class('./neofrag/classes/widget_view.php');
+function __autoload($name)
+{
+	if ($override = substr($name = strtolower($name), 0, 2) == 'o_')
+	{
+		$name = substr($name, 2);
+	}
 
-//Appel de la librairie Loader
-include_class('./neofrag/core/loader.php');
+	if (file_exists($file = ($override ? 'overrides' : 'neofrag').'/'.($name == 'loader' ? 'core' : 'classes').'/'.$name.'.php'))
+	{
+		require_once $file;
+	}
+}
 
-//Création du loader de base
-$NeoFrag = new Loader(
-	array(
-		'assets' => array(
-			'./assets',
-			'./overrides/themes/default',
-			'./neofrag/themes/default'
-		),
-		'config' => array(
-			'./neofrag/config',
-			'./overrides/config',
-			'./config'
-		),
-		'core' => array(
-			'./overrides/core',
-			'./neofrag/core'
-		),
-		'helpers' => array(
-			'./overrides/helpers',
-			'./neofrag/helpers'
-		),
-		'lang' => array(
-			'./overrides/lang',
-			'./neofrag/lang'
-		),
-		'libraries' => array(
-			'./overrides/libraries',
-			'./neofrag/libraries',
-		),
-		'modules' => array(
-			'./overrides/modules',
-			'./neofrag/modules',
-			'./modules'
-		),
-		'themes' => array(
-			'./overrides/themes',
-			'./neofrag/themes',
-			'./themes'
-		),
-		'views' => array(
-			'./overrides/themes/default/views',
-			'./neofrag/themes/default/views'
-		),
-		'widgets' => array(
-			'./overrides/widgets',
-			'./neofrag/widgets',
-			'./widgets'
-		)
-	)
-);
+function load($name)
+{
+	$args = array_slice(func_get_args(), 1);
 
-//Chargement des librairies
-$NeoFrag->core(
-	'error',
-	'cache',
-	'template',
-	'assets',
-	'profiler',
-	'database',
-	'config',
-	'addons',
-	'session',
-	'user',
-	'language',
-	'groups',
-	'router',
-	'output'
-);
+	$override = FALSE;
+
+	if (substr($name, 0, 2) == 'o_')
+	{
+		$override = TRUE;
+	}
+	else if (class_exists('o_'.$name))
+	{
+		$name = 'o_'.$name;
+		
+		$override = TRUE;
+	}
+
+	$r = new ReflectionClass($name);
+
+	if ($debug = NeoFrag::loader() === NULL || NeoFrag::loader()->config === NULL || NeoFrag::loader()->user === NULL || NeoFrag::loader()->debug === NULL || NeoFrag::loader()->debug->is_enabled())
+	{
+		$memory = memory_get_usage();
+		$time   = microtime(TRUE);
+	}
+	
+	$object = $r->newInstanceArgs($args);
+	
+	if ($debug)
+	{
+		$object->memory = [$memory, memory_get_usage()];
+		$object->time   = [$time, microtime(TRUE)];
+
+		if ($override)
+		{
+			$object->override = TRUE;
+		}
+	}
+
+	return $object;
+}
+
+$NeoFrag = load('loader', [
+	'assets' => [
+		'assets',
+		'overrides/themes/default',
+		'neofrag/themes/default'
+	],
+	'config' => [
+		'overrides/config',
+		'neofrag/config',
+		'config'
+	],
+	'core' => [
+		'overrides/core',
+		'neofrag/core'
+	],
+	'helpers' => [
+		'overrides/helpers',
+		'neofrag/helpers'
+	],
+	'lang' => [
+		'overrides/lang',
+		'neofrag/lang'
+	],
+	'libraries' => [
+		'overrides/libraries',
+		'neofrag/libraries',
+	],
+	'modules' => [
+		'overrides/modules',
+		'neofrag/modules',
+		'modules'
+	],
+	'themes' => [
+		'overrides/themes',
+		'neofrag/themes',
+		'themes'
+	],
+	'views' => [
+		'overrides/themes/default/views',
+		'neofrag/themes/default/views'
+	],
+	'widgets' => [
+		'overrides/widgets',
+		'neofrag/widgets',
+		'widgets'
+	]
+]);
+
+$NeoFrag->modules = $NeoFrag->themes = $NeoFrag->widgets = $NeoFrag->css = $NeoFrag->js = $NeoFrag->js_load = [];
+
+$NeoFrag->module = $NeoFrag->theme = NULL;
+
+foreach (['array', 'assets', 'buttons', 'color', 'file', 'geolocalisation', 'dir', 'i18n', 'input', 'location', 'network', 'notify', 'output', 'statistics', 'string', 'time', 'user_agent'] as $helper)
+{
+	$NeoFrag->helper($helper);
+}
+
+foreach(['debug', 'template', 'db', 'config', 'access', 'addons', 'session', 'user', 'groups', 'breadcrumb', 'router', 'output'] as $library)
+{
+	$NeoFrag->{'core_'.$library};
+
+	if ($library == 'config' && is_asset() && !preg_match('#^backups/#', $NeoFrag->config->request_url))
+	{
+		asset($NeoFrag->config->request_url);
+	}
+}
+
+$NeoFrag	->router->exec()
+			->output->display();
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./index.php
 */

@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -24,7 +24,7 @@ class m_teams_m_roles extends Model
 	{
 		return $this->db	->select('role_id', 'title')
 							->from('nf_teams_roles')
-							->order_by('title')
+							->order_by('order', 'role_id')
 							->get();
 	}
 	
@@ -47,17 +47,17 @@ class m_teams_m_roles extends Model
 	
 	public function add_role($title)
 	{
-		$this->db->insert('nf_teams_roles', array(
+		$this->db->insert('nf_teams_roles', [
 			'title' => $title
-		));
+		]);
 	}
 
 	public function edit_role($role_id, $title)
 	{
 		$this->db	->where('role_id', $role_id)
-					->update('nf_teams_roles', array(
+					->update('nf_teams_roles', [
 						'title' => $title
-					));
+					]);
 	}
 	
 	public function delete_role($role_id)
@@ -68,6 +68,6 @@ class m_teams_m_roles extends Model
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./modules/teams/models/roles.php
 */

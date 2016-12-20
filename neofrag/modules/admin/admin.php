@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,7 +20,7 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class m_admin extends Module
 {
-	public $name          = 'Administration';
+	public $title         = '{lang administration}';
 	public $description   = '';
 	public $icon          = 'fa-dashboard';
 	public $link          = 'http://www.neofrag.com';
@@ -28,12 +28,10 @@ class m_admin extends Module
 	public $licence       = 'http://www.neofrag.com/license.html LGPLv3';
 	public $version       = 'Alpha 0.1';
 	public $nf_version    = 'Alpha 0.1';
-	public $administrable = FALSE;
-	public $deactivatable = FALSE;
 	public $path          = __FILE__;
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.4
 ./neofrag/modules/admin/admin.php
 */

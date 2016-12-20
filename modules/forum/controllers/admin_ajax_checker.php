@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,34 +22,28 @@ class m_forum_c_admin_ajax_checker extends Controller
 {
 	public function _categories_move()
 	{
-		if (($check = $this->_check('category_id', 'position')) && $this->db->select('1')->from('nf_forum_categories')->where('category_id', $check['category_id'])->row())
+		if (($check = post_check('category_id', 'position')) && $this->db->select('1')->from('nf_forum_categories')->where('category_id', $check['category_id'])->row())
 		{
 			return $check;
 		}
-		
-		throw new Exception(NeoFrag::UNFOUND);
 	}
 	
 	public function move()
 	{
-		if (($check = $this->_check('category_id', 'forum_id', 'position')) && $this->db->select('1')->from('nf_forum')->where('forum_id', $check['forum_id'])->row() && $this->db->select('1')->from('nf_forum_categories')->where('category_id', $check['category_id'])->row())
+		if (	($check = post_check('parent_id', 'forum_id', 'position')) &&
+				!is_array($is_subforum = $this->db->select('is_subforum')->from('nf_forum')->where('forum_id', $check['forum_id'])->row()) &&
+				(
+					($is_subforum  && $this->db->select('1')->from('nf_forum')->where('forum_id', $check['parent_id'])->where('is_subforum', FALSE)->row()) ||
+					(!$is_subforum && $this->db->select('1')->from('nf_forum_categories')->where('category_id', $check['parent_id'])->row())
+				)
+			)
 		{
-			return $check;
-		}
-		
-		throw new Exception(NeoFrag::UNFOUND);
-	}
-	
-	private function _check()
-	{
-		if (!array_diff(array_keys($args = array_intersect_key(post(), array_flip(func_get_args()))), func_get_args()))
-		{
-			return $args;
+			return array_merge($check, [$is_subforum]);
 		}
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./modules/forum/controllers/admin_ajax_checker.php
 */

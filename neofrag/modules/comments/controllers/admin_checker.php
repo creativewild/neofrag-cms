@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,28 +20,30 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class m_comments_c_admin_checker extends Controller
 {
-	public function index($tab = 'default', $page = '')
+	public function index($tab = '', $page = '')
 	{
 		$comments = $this->model()->get_comments();
-		$modules  = array();
+		$modules  = [];
 
 		foreach ($comments as $i => $comment)
 		{
-			$modules[$comment['module']] = array($comment['module_title'], $comment['icon']);
+			$modules[$comment['module']] = [$comment['module_title'], $comment['icon']];
 
-			if (!in_array($tab, array('default', $comment['module'])))
+			if (!in_array($tab, ['', $comment['module']]))
 			{
 				unset($comments[$i]);
 			}
 		}
 
-		uasort($modules, create_function('$a, $b', 'return strnatcmp($a[\'title\'], $b[\'title\']);'));
+		array_natsort($modules, function($a){
+			return $a[0];
+		});
 
-		return array($this->load->library('pagination')->get_data($comments, $page), $modules, $tab);
+		return [$this->pagination->get_data($comments, $page), $modules, $tab];
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./neofrag/modules/comments/controllers/admin_checker.php
 */

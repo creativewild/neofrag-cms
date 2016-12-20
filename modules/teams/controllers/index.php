@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,24 +22,24 @@ class m_teams_c_index extends Controller_Module
 {
 	public function index()
 	{
-		$panels = array();
+		$panels = [];
 		
 		foreach ($this->model()->get_teams() as $team)
 		{
-			$panel = array(
-				'title'  => '<a href="'.$this->config->base_url.'teams/'.$team['team_id'].'/'.$team['name'].'.html">'.$team['title'].'</a>',
-				'footer' => '{fa-icon users} '.$team['users'].' '.($team['users'] > 1 ? 'joueurs' : 'joueur'),
+			$panel = [
+				'title'  => '<a href="'.url('teams/'.$team['team_id'].'/'.$team['name'].'.html').'">'.$team['title'].'</a>',
+				'footer' => icon('fa-users').' '.$this('player', $team['users'], $team['users']),
 				'body'   => FALSE
-			);
+			];
 			
 			if ($team['image_id'])
 			{
-				$panel['content'] = '<a href="'.$this->config->base_url.'teams/'.$team['team_id'].'/'.$team['name'].'.html"><img class="img-responsive" src="{image '.$team['image_id'].'}" alt="" /></a>';
+				$panel['content'] = '<a href="'.url('teams/'.$team['team_id'].'/'.$team['name'].'.html').'"><img class="img-responsive" src="'.path($team['image_id']).'" alt="" /></a>';
 			}
 			
 			if ($team['icon_id'] || $team['game_icon'])
 			{
-				$panel['title'] = '<img src="{image '.($team['icon_id'] ?: $team['game_icon']).'}" alt="" /> '.$panel['title'];
+				$panel['title'] = '<img src="'.path($team['icon_id'] ?: $team['game_icon']).'" alt="" /> '.$panel['title'];
 			}
 			else
 			{
@@ -51,12 +51,12 @@ class m_teams_c_index extends Controller_Module
 		
 		if (empty($panels))
 		{
-			$panels[] = new Panel(array(
-				'title'   => 'Équipes',
+			$panels[] = new Panel([
+				'title'   => $this('teams'),
 				'icon'    => 'fa-gamepad',
 				'style'   => 'panel-info',
-				'content' => '<div class="text-center">Aucune équipe n\'a été créée pour le moment</div>'
-			));
+				'content' => '<div class="text-center">'.$this('no_team_yet').'</div>'
+			]);
 		}
 
 		return $panels;
@@ -65,56 +65,62 @@ class m_teams_c_index extends Controller_Module
 	public function _team($team_id, $name, $title, $image_id, $icon_id, $description, $game_id, $game, $game_icon)
 	{
 		$this	->title($title)
-				->load->library('table')
-				->add_columns(array(
-					array(
-						'content' => '<img class="img-avatar-members" style="max-height: 40px; max-width: 40px;" src="<?php echo $NeoFrag->user->avatar($data[\'avatar\'], $data[\'sex\']); ?>" title="<?php echo $data[\'username\']; ?>" alt="" />',
+				->table
+				->add_columns([
+					[
+						'content' => function($data){
+							return NeoFrag::loader()->user->avatar($data['avatar'], $data['sex'], $data['user_id'], $data['username']);
+						},
 						'size'    => TRUE
-					),
-					array(
-						'content' => '<div><?php echo $NeoFrag->user->link($data[\'user_id\'], $data[\'username\']); ?></div><small><i class="fa fa-circle <?php echo $data[\'online\'] ? \'text-green\' : \'text-gray\'; ?>"></i> <?php echo $data[\'admin\'] ? \'Admin\' : \'Membre\'; ?> <?php echo $data[\'online\'] ? \'en ligne\' : \'hors ligne\'; ?></small>',
-					),
-					array(
-						'content' => '{title}',
-					)
-				))
+					],
+					[
+						'content' => function($data, $loader){
+							return '<div>'.NeoFrag::loader()->user->link($data['user_id'], $data['username']).'</div><small>'.icon('fa-circle '.($data['online'] ? 'text-green' : 'text-gray')).' '.$loader->lang($data['admin'] ? 'admin' : 'member').' '.$loader->lang($data['online'] ? 'online' : 'offline').'</small>';
+						},
+					],
+					[
+						'content' => function($data){
+							return $data['title'];
+						},
+					]
+				])
 				->data($this->model()->get_players($team_id))
-				->no_data('Il n\'y a pas encore de joueur dans cette équipe');
+				->no_data($this('no_players_on_team'));
 		
-		$panel = array(
+		$panel = [
 			'title' => '	<div class="pull-right">
 								<span class="label label-default">'.$game.'</span>
 							</div>
-							<a href="'.$this->config->base_url.'teams/'.$team_id.'/'.$name.'.html">'.$title.'</a>',
+							<a href="'.url('teams/'.$team_id.'/'.$name.'.html').'">'.$title.'</a>',
 			'body'  => FALSE
-		);
+		];
 		
-		$panel['content'] = $this->load->view('index', array(
+		$panel['content'] = $this->load->view('index', [
 			'team_id'     => $team_id,
 			'name'        => $name,
 			'title'       => $title,
 			'image_id'    => $image_id,
 			'description' => bbcode($description),
 			'users'       => $this->table->display()
-		));
+		]);
 		
 		if ($icon_id || $game_icon)
 		{
-			$panel['title'] = '<img src="{image '.($icon_id ?: $game_icon).'}" alt="" /> '.$panel['title'];
+			$panel['title'] = '<img src="'.path($icon_id ?: $game_icon).'" alt="" /> '.$panel['title'];
 		}
 		else
 		{
 			$panel['icon'] = 'fa-gamepad';
 		}
 		
-		return array(
+		return [
 			new Panel($panel),
 			new Button_back('teams.html')
-		);
+		];
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./modules/teams/controllers/index.php
 */

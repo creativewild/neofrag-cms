@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,18 +22,17 @@ function relative_path($file)
 {
 	$file  = substr(str_replace('\\', '/', $file), strlen(NEOFRAG_CMS));
 
-	return ((substr($file, 0, 1) == '/') ? '.' : './').$file;
+	return (substr($file, 0, 1) == '/' ? '.' : './').$file;
 }
 
-function extension($file, &$path = NULL)
+function extension($file)
 {
-	$url = parse_url($file);
-	return strtolower(pathinfo($path = $url['path'], PATHINFO_EXTENSION));
+	return strtolower(pathinfo(parse_url($file, PHP_URL_PATH), PATHINFO_EXTENSION));
 }
 
 function get_mime_by_extension($extension)
 {
-	$mimes = array(
+	$mimes = [
 		'bmp'   => 'image/bmp',
 		'css'   => 'text/css',
 		'eot'   => 'application/vnd.ms-fontobject"',
@@ -51,7 +50,7 @@ function get_mime_by_extension($extension)
 		'woff'  => 'application/x-font-woff',
 		'woff2' => 'application/font-woff2',
 		'zip'   => 'application/zip'
-	);
+	];
 
 	return $mimes[$extension];
 }
@@ -90,26 +89,29 @@ function parse_size($size)
 	}
 }
 
-function image_resize($filename, $width, $height)
+function image_resize($filename, $width, $height = NULL)
 {
 	$info = getimagesize($filename);
 	$w    = $info[0];
 	$h    = $info[1];
+	$type = $info[2];
 	$mime = $info['mime'];
 	
-	if ($w == $width && $h == $height)
+	if ($height === NULL)
+	{
+		$height = ceil($h * $width / $w);
+	}
+	
+	if ($w <= $width && $h <= $height)
 	{
 		return;
 	}
 	
-	$resize = imagecreatetruecolor($width, $width);
+	$resize = imagecreatetruecolor($width, $height);
 	
 	if ($mime == 'image/png')
 	{
 		$image = imagecreatefrompng($filename);
-		imagealphablending($resize, FALSE);
-		imagesavealpha($resize, TRUE);
-		imagecolortransparent($resize, imagecolorallocatealpha($resize, 255, 255, 255, 127));
 	}
 	else if ($mime == 'image/jpeg')
 	{
@@ -124,7 +126,25 @@ function image_resize($filename, $width, $height)
 		return;
 	}
 	
-	imagecopyresampled($resize, $image, 0, 0, 0, 0, $width, $width, $w, $h);
+	if ($type == IMAGETYPE_GIF || $type == IMAGETYPE_PNG)
+	{
+		$current_transparent = imagecolortransparent($image);
+		if ($current_transparent != -1)
+		{
+			$transparent_color = imagecolorsforindex($image, $current_transparent);
+			$current_transparent = imagecolorallocate($resize, $transparent_color['red'], $transparent_color['green'], $transparent_color['blue']);
+			imagefill($resize, 0, 0, $current_transparent);
+			imagecolortransparent($resize, $current_transparent);
+		}
+		else if ($type == IMAGETYPE_PNG)
+		{
+			imagealphablending($resize, FALSE);
+			imagefill($resize, 0, 0, imagecolorallocatealpha($resize, 0, 0, 0, 127));
+			imagesavealpha($resize, TRUE);
+		}
+	}
+	
+	imagecopyresampled($resize, $image, 0, 0, 0, 0, $width, $height, $w, $h);
 	
 	if ($mime == 'image/png')
 	{
@@ -141,6 +161,6 @@ function image_resize($filename, $width, $height)
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./neofrag/helpers/file.php
 */

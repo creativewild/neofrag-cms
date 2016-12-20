@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,24 +20,37 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class Library extends NeoFrag
 {
-	public function reset($trace = 2)
+	static public $ID;
+
+	public $id;
+	public $load;
+	public $name = '';
+
+	public function reset()
 	{
-		if ($key = array_search($this, $this->load->libraries))
+		if (isset($this->load->libraries[$this->name]))
 		{
-			unset($this->load->libraries[$key]);
-			$this->load->library($key, $trace);
+			unset($this->load->libraries[$this->name]);
 		}
 	}
 
 	public function save()
 	{
 		$clone = clone $this;
-		$this->reset(4);
+
+		$this->reset();
+
 		return $clone;
+	}
+
+	public function set_id($id = NULL)
+	{
+		$this->id = $id ?: md5($this->name.++self::$ID);
+		return $this;
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.2
 ./neofrag/classes/library.php
 */

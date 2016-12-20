@@ -1,11 +1,9 @@
-@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700,800);
-@import url(http://fonts.googleapis.com/css?family=Economica:400,700);
-
 body {
-	background-image: url('{image backgrounds/default.jpg}');
-	background-position: top center;
-	background-repeat: no-repeat;
-	background-color: #141d26;
+	background-image: url('<?php echo $NeoFrag->config->default_background ? path($NeoFrag->config->default_background) : '../images/backgrounds/default.jpg'; ?>');
+	background-position: <?php echo $NeoFrag->config->default_background_position; ?>;
+	background-repeat: <?php echo $NeoFrag->config->default_background_repeat; ?>;
+	background-attachment: <?php echo $NeoFrag->config->default_background_attachment; ?>;
+	background-color: <?php echo color2hex($NeoFrag->config->default_background_color); ?>;
 	font-family: 'Open Sans', sans-serif;
 	font-size: 13px;
 	color: #656D79;
@@ -138,6 +136,14 @@ h5.site-description {
 	font-size: 16px;
 }
 
+.module a.label, .popover a.label {
+	line-height: 2.3em;
+}
+
+.module .list-group .label {
+	line-height: 1.5em;
+}
+
 .table {
 	margin-bottom: 10px;
 }
@@ -243,11 +249,13 @@ a.btn-link.btn-light:hover {
 	color: #fff;
 }
 
-.table-content > .pagination a.btn-default.active {
-	background-color: #484e58;
-	border-color: #2c3037;
-	box-shadow: none;
-	color: #dddad6;
+.input-group .btn {
+	font-size: 14px;
+}
+
+.btn-group-lg > .btn, .btn-lg {
+	border-radius: 0;
+	padding: 13px 16px;
 }
 
 /* Navbar */
@@ -307,7 +315,7 @@ nav.navbar.navbar-topbar ul.nav.navbar-nav > li.active {
 /* navbar-inverse */
 
 .navbar.navbar-inverse {
-	background: url('{image navbar.png}') no-repeat top center;
+	background: url('<?php echo image('navbar.png'); ?>') no-repeat top center;
 	border-color: #212427;
 }
 
@@ -556,13 +564,13 @@ nav.navbar.navbar-topbar ul.nav.navbar-nav > li.active {
 /* row light */
 
 .row-light {
-	background: url('{image gray_light.png}');
+	background: url('<?php echo image('gray_light.png'); ?>');
 }
 
 /* row dark */
 
 .row-dark {
-	background: url('{image gray_dark.png}');
+	background: url('<?php echo image('gray_dark.png'); ?>');
 }
 
 /* row black */
@@ -660,10 +668,6 @@ nav.navbar.navbar-topbar ul.nav.navbar-nav > li.active {
 	margin-top: 15px;
 }
 
-.module-news .panel-body .media .media-body img, .module-news .panel-body img {
-	border-radius: 0;
-}
-
 .module-forum thead.forum-heading > tr > th {
 	padding: 15px 10px;
 }
@@ -704,28 +708,9 @@ nav.navbar.navbar-topbar ul.nav.navbar-nav > li.active {
 	margin: 0 10px;
 }
 
-.module-forum img.img-avatar-forum {
-	max-width: 140px;
-	max-height: 140px;
-	margin-bottom: 15px;
-	border-radius: 100%;
-}
-
-.module-members table.table i.fa {
-	display: inline-block;
-	min-width: 15px;
-	margin-right: 5px;
-	text-align: center;
-	color: #898584;
-}
-
 .module > .row {
 	margin-left: -5px;
 	margin-right: -5px;
-}
-
-.img-avatar-members {
-	border-radius: 100%;
 }
 
 .input-group-addon {
@@ -733,10 +718,6 @@ nav.navbar.navbar-topbar ul.nav.navbar-nav > li.active {
 }
 
 /* WIDGETS */
-
-.widget .media img, .panel .media img, .widget.widget-user .panel-body img {
-	border-radius: 100%;
-}
 
 .widget-news .media .media-body i.fa.fa-comment-o {
 	margin-left: 5px;
@@ -767,6 +748,12 @@ nav.navbar.navbar-topbar ul.nav.navbar-nav > li.active {
 
 .widget.widget-user > ul.navbar-nav > p.navbar-text {
 	margin-top: 21px;
+}
+
+.widget.widget-user > ul.navbar-nav > li > .label {
+	position: absolute;
+	top: 10px;
+	right: 5px;
 }
 
 .widget.widget-navigation > ul.navbar-nav > li > a, .widget.widget-user > ul.navbar-nav > li > a {

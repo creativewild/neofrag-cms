@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,24 +22,23 @@ class Table extends Library
 {
 	private $_ajax          = FALSE;
 	private $_pagination    = TRUE;
-	private $_actions       = array();
-	private $_columns       = array();
-	private $_data          = array();
-	private $_sortings      = array();
-	private $_preprocessing = array();
+	private $_columns       = [];
+	private $_data          = [];
+	private $_sortings      = [];
+	private $_preprocessing = [];
 	private $_no_data       = '';
-	private $_words         = array();
-
+	private $_words         = [];
+	
 	public function add_column($title, $content, $size = NULL, $search = NULL, $sort = NULL, $align = 'left')
 	{
-		$this->_columns[] = array(
+		$this->_columns[] = [
 			'title'   => $title,
 			'content' => $content,
 			'size'    => $size,
 			'search'  => $search,
 			'sort'    => $sort,
 			'align'   => $align
-		);
+		];
 
 		return $this;
 	}
@@ -50,22 +49,16 @@ class Table extends Library
 		return $this;
 	}
 
-	public function add_action($action)
-	{
-		$this->_actions[] = $action;
-		return $this;
-	}
-
 	public function sort_by($column_id, $order = SORT_ASC, $type = SORT_REGULAR)
 	{
-		if (is_integer($column_id) && in_array($order, array(SORT_ASC, SORT_DESC, -1)) && in_array($type, array(SORT_REGULAR, SORT_NUMERIC, SORT_STRING)))
+		if (is_integer($column_id) && in_array($order, [SORT_ASC, SORT_DESC, -1]) && in_array($type, [SORT_REGULAR, SORT_NUMERIC, SORT_STRING]))
 		{
 			if (isset($this->_sortings[$column_id - 1]))
 			{
 				unset($this->_sortings[$column_id - 1]);
 			}
 
-			$this->_sortings[$column_id - 1] = array($order, $type);
+			$this->_sortings[$column_id - 1] = [$order, $type];
 		}
 
 		return $this;
@@ -107,8 +100,7 @@ class Table extends Library
 		{
 			if (post('table_id') == $this->id)
 			{
-				$this->config->ajax_url = TRUE;
-				$this->_ajax            = TRUE;
+				$this->_ajax = TRUE;
 			}
 			else
 			{
@@ -117,7 +109,7 @@ class Table extends Library
 			}
 		}
 
-		if (!is_null($session_sort = $this->session('table', $this->id, 'sort')))
+		if (($session_sort = $this->session('table', $this->id, 'sort')) !== NULL )
 		{
 			foreach ($session_sort as $session)
 			{
@@ -126,16 +118,16 @@ class Table extends Library
 			}
 		}
 
-		if ($this->_pagination && !empty($this->pagination) && !is_null($items_per_page = $this->session('table', $this->id, 'items_per_page')))
+		if ($this->_pagination && !empty($this->pagination) && ($items_per_page = $this->session('table', $this->id, 'items_per_page')) !== NULL)
 		{
 			$this->pagination->set_items_per_page($items_per_page);
 		}
 
-		if (!is_null($sort = post('sort')) && $this->_ajax)
+		if (($sort = post('sort')) !== NULL && $this->_ajax)
 		{
 			list($column_id, $order) = json_decode($sort);
 			
-			if (in_array($order, array('asc', 'desc', 'none')))
+			if (in_array($order, ['asc', 'desc', 'none']))
 			{
 				if ($order == 'asc')
 				{
@@ -152,7 +144,7 @@ class Table extends Library
 				
 				$added = FALSE;
 				
-				if (!is_null($session_sort = $this->session('table', $this->id, 'sort')))
+				if (($session_sort = $this->session('table', $this->id, 'sort')) !== NULL)
 				{
 					foreach ($session_sort as $i => $session)
 					{
@@ -162,7 +154,7 @@ class Table extends Library
 
 							if ($order != -1 || isset($this->_sortings[$column_id]))
 							{
-								$this->session->set('table', $this->id, 'sort', $i, array($column_id, $order));
+								$this->session->set('table', $this->id, 'sort', $i, [$column_id, $order]);
 							}
 							else
 							{
@@ -174,7 +166,7 @@ class Table extends Library
 
 				if (!$added)
 				{
-					$this->session->add('table', $this->id, 'sort', array($column_id, $order));
+					$this->session->add('table', $this->id, 'sort', [$column_id, $order]);
 				}
 
 				$this->sort_by($column_id, $order);
@@ -182,6 +174,8 @@ class Table extends Library
 
 			$search = $this->session('table', $this->id, 'search');
 		}
+		
+		$count_results  = $this->_pagination && !empty($this->pagination) ? $this->pagination->count() : count($this->_data);
 		
 		if ($this->_is_searchable() && $search && $this->_pagination && !empty($this->pagination))
 		{
@@ -199,17 +193,17 @@ class Table extends Library
 		{
 			if ($search)
 			{
-				$results = array();
+				$results = [];
 				$words   = explode(' ', trim($search));
 
 				foreach ($this->_data as $data_id => $data)
 				{
 					$found = 0;
-					$data  = array_merge(array('data_id' => $data_id), $data);
+					$data  = array_merge(['data_id' => $data_id], $data);
 
 					foreach ($this->_columns as $value)
 					{
-						if (!isset($value['search']) || is_null($value['search']))
+						if (!isset($value['search']) || $value['search'] === NULL)
 						{
 							continue;
 						}
@@ -239,22 +233,22 @@ class Table extends Library
 				$this->session->set('table', $this->id, 'search', $search);
 
 				$this->_data    = $results;
-				$this->_no_data = 'Aucun résultat ne correspond à la recherche';
+				$this->_no_data = NeoFrag::loader()->lang('no_result');
 			}
 			else
 			{
 				$this->session->destroy('table', $this->id, 'search');
 			}
 
-			$words = array();
+			$words = [];
 
 			foreach ($this->_data as $data_id => $data)
 			{
-				$data = array_merge(array('data_id' => $data_id), $data);
+				$data = array_merge(['data_id' => $data_id], $data);
 				
 				foreach ($this->_columns as $value)
 				{
-					if (!isset($value['search']) || is_null($value['search']))
+					if (!isset($value['search']) || $value['search'] === NULL)
 					{
 						continue;
 					}
@@ -267,7 +261,7 @@ class Table extends Library
 
 		if (empty($this->_data))
 		{
-			$output = $this->_no_data ?: 'Il n\'y a rien ici pour le moment';
+			$output = '<div class="clearfix"></div>'.($this->_no_data ?: NeoFrag::loader()->lang('no_data'));
 		}
 		else
 		{
@@ -275,7 +269,7 @@ class Table extends Library
 			{
 				$search_input = '	<div class="table-search pull-left">
 										<div class="form-group has-feedback">
-											<input class="form-control table-search-input" data-provide="typeahead" data-items="5" data-source="'.utf8_htmlentities('['.trim_word(implode(', ', array_unique($words)), ', ').']').'" type="text"'.((isset($search)) ? ' value="'.$search.'"' : '').' placeholder="Rechercher..." autocomplete="off" />
+											<input class="form-control" data-provide="typeahead" data-items="5" data-source="'.utf8_htmlentities('['.implode(', ', array_unique(array_filter($words))).']').'" type="text"'.(!empty($search) ? ' value="'.$search.'"' : '').' placeholder="'.NeoFrag::loader()->lang('search').'" autocomplete="off" />
 										</div>
 									</div>';
 			}
@@ -283,7 +277,7 @@ class Table extends Library
 			//Gestion des tris
 			if (!empty($this->_sortings))
 			{
-				$sortings = array();
+				$sortings = [];
 				foreach ($this->_sortings as $column => $order)
 				{
 					if (!isset($this->_columns[$column]) || !isset($this->_columns[$column]['sort']) || $order[0] == -1)
@@ -291,10 +285,10 @@ class Table extends Library
 						continue;
 					}
 
-					$tmp = array();
+					$tmp = [];
 					foreach ($this->_data as $data_id => $data)
 					{
-						$data = array_merge(array('data_id' => $data_id), $data);
+						$data = array_merge(['data_id' => $data_id], $data);
 						$tmp[] = $this->template->parse($this->_columns[$column]['sort'], $data, $this->load);
 					}
 
@@ -302,7 +296,7 @@ class Table extends Library
 					$sortings   = array_merge($sortings, $order);
 				}
 
-				$data = array();
+				$data = [];
 				
 				foreach ($this->_data as $key => $value)
 				{
@@ -313,7 +307,7 @@ class Table extends Library
 
 				call_user_func_array('array_multisort', $sortings);
 				
-				$this->_data = array();
+				$this->_data = [];
 				
 				foreach ($data as $key => $value)
 				{
@@ -328,23 +322,25 @@ class Table extends Library
 
 			if ($this->_pagination && !empty($this->pagination) && $this->pagination->count() > 10)
 			{
-				$output .= '<div class="pull-left" style="margin-bottom: 15px;">
+				$output .= '<div class="form-group pull-left">
 								<select class="form-control" style="width: auto;" onchange="window.location=\''.$this->pagination->get_url().'/\'+$(this).find(\'option:selected\').data(\'url\')+\'.html\'" autocomplete="off">
-									<option value="10"'. ($this->pagination->get_items_per_page() == 10  ? ' selected="selected"' : '').' data-url="page/1/10">10 résultats</option>
-									<option value="25"'. ($this->pagination->get_items_per_page() == 25  ? ' selected="selected"' : '').' data-url="page/1/25">25 résultats</option>
-									<option value="50"'. ($this->pagination->get_items_per_page() == 50  ? ' selected="selected"' : '').' data-url="page/1/50">50 résultats</option>
-									<option value="100"'.($this->pagination->get_items_per_page() == 100 ? ' selected="selected"' : '').' data-url="page/1/100">100 résultats</option>
-									<option value="all"'.($this->pagination->get_items_per_page() == 0   ? ' selected="selected"' : '').' data-url="all">Tout afficher</option>
+									<option value="10"'. ($this->pagination->get_items_per_page() == 10  ? ' selected="selected"' : '').' data-url="page/1/10">'.NeoFrag::loader()->lang('results', 10, 10).'</option>
+									<option value="25"'. ($this->pagination->get_items_per_page() == 25  ? ' selected="selected"' : '').' data-url="page/1/25">'.NeoFrag::loader()->lang('results', 25, 25).'</option>
+									<option value="50"'. ($this->pagination->get_items_per_page() == 50  ? ' selected="selected"' : '').' data-url="page/1/50">'.NeoFrag::loader()->lang('results', 50, 50).'</option>
+									<option value="100"'.($this->pagination->get_items_per_page() == 100 ? ' selected="selected"' : '').' data-url="page/1/100">'.NeoFrag::loader()->lang('results', 100, 100).'</option>
+									<option value="all"'.($this->pagination->get_items_per_page() == 0   ? ' selected="selected"' : '').' data-url="all">'.NeoFrag::loader()->lang('show_all').'</option>
 								</select>
 							</div>';
 			}
 
 			if ($this->_pagination && !empty($this->pagination) && ($pagination = $this->pagination->get_pagination()) != '')
 			{
-				$output .= $pagination;
+				$output .= '<div class="form-group pull-right">'.$pagination.'</div>';
 			}
 
-			$output .= '<table class="table table-hover table-striped">';
+			$count = count($this->_data);
+			
+			$output .= '<div class="table-responsive"><table class="table table-hover table-striped">';
 		
 			if ($this->_display_header())
 			{
@@ -352,25 +348,12 @@ class Table extends Library
 
 				$header = '			<tr class="navbar-inner">';
 
-				if (count($this->_data) > 1 && !empty($this->_actions))
-				{
-					array_unshift($this->_columns, array(
-						'title' => '<input class="table-checkbox" type="checkbox" data-toggle="tooltip" title="Sélectionner toutes les lignes" autocomplete="off" />',
-						'content' => '<input class="table-checkbox" type="checkbox" autocomplete="off" />',
-						'size' => TRUE
-					));
-					
-					$i = -1;
-				}
-				else
-				{
-					$i = 0;
-				}
+				$i = 0;
 
 				foreach ($this->_columns as $th)
 				{
 					$width = isset($th['size']) ? $th['size'] : FALSE;
-					$class = array();
+					$class = [];
 					$sort  = '';
 					
 					if ($width === TRUE)
@@ -399,8 +382,13 @@ class Table extends Library
 							$sort   .= ' data-order-by="asc"';
 						}
 					}
+					
+					if (!empty($th['align']) && in_array($th['align'], ['left', 'center', 'right']))
+					{
+						$class[] = 'text-'.$th['align'];
+					}
 
-					$header .= '		<th'.(is_array($th['content']) && !empty($this->_data) ? ' colspan="'.count($th['content']).'"' : '').(!empty($class) ? ' class="'.implode(' ', $class).'"' : '').(!is_bool($width) ? ' style="width: '.$width.';"' : '').(!empty($sort) ? $sort : '').'>'.(!empty($th['title']) ? $th['title'] : '').'</th>';
+					$header .= '		<th'.(!empty($class) ? ' class="'.implode(' ', $class).'"' : '').(!is_bool($width) ? ' style="width: '.$width.';"' : '').(!empty($sort) ? $sort : '').'>'.(!empty($th['title']) ? $th['title'] : '').'</th>';
 
 					$i++;
 				}
@@ -415,7 +403,7 @@ class Table extends Library
 
 			foreach ($this->_data as $data_id => $data)
 			{
-				$data = array_merge(array('data_id' => $data_id), $data);
+				$data = array_merge(['data_id' => $data_id], $data);
 
 				$output .= '<tr>';
 
@@ -423,31 +411,42 @@ class Table extends Library
 				{
 					if (is_array($value['content']))
 					{
+						$actions = [];
+						
 						foreach ($value['content'] as $val)
 						{
-							$output .= '<td class="action">'.$this->template->parse($val, $data, $this->load).'</td>';
+							$actions[] = $this->template->parse($val, $data, $this->load);
 						}
+						
+						$output .= '<td class="action">'.implode('&nbsp;', array_filter($actions)).'</td>';
 					}
 					else
 					{
-						$classes = array();
-						
-						if (isset($value['size']) && $value['size'] === TRUE)
-						{
-							$classes[] = 'action';
-						}
-						
-						if (!empty($value['class']))
-						{
-							$classes[] = $value['class'];
-						}
-						
-						if (!empty($value['align']) && in_array($value['align'], array('left', 'center', 'right')))
-						{
-							$classes[] = 'text-'.$value['align'];
-						}
+						$content = $this->template->parse($value['content'], $data, $this->load);
 
-						$output .= '<td'.(!empty($classes) ? ' class="'.implode(' ', $classes).'"' : '').'>'.$this->template->parse($value['content'], $data, $this->load).'</td>';
+						if (!isset($value['td']) || $value['td'])
+						{
+							$classes = [];
+							
+							if (isset($value['size']) && $value['size'] === TRUE)
+							{
+								$classes[] = 'action';
+							}
+							
+							if (!empty($value['class']))
+							{
+								$classes[] = $value['class'];
+							}
+							
+							if (!empty($value['align']) && in_array($value['align'], ['left', 'center', 'right']))
+							{
+								$classes[] = 'text-'.$value['align'];
+							}
+
+							$content = '<td'.(!empty($classes) ? ' class="'.implode(' ', $classes).'"' : '').'>'.$content.'</td>';
+						}
+						
+						$output .= $content;
 					}
 				}
 
@@ -456,33 +455,23 @@ class Table extends Library
 
 			$output .= '	</tbody>';
 
-			if ($this->_pagination && !empty($this->pagination) && $this->pagination->get_items_per_page() >= 50 && count($this->_data) >= 50)
+			if ($this->_pagination && !empty($this->pagination) && $this->pagination->get_items_per_page() >= 50 && $count >= 50)
 			{
 				$output .= '<tfoot>'.$header.'</tfoot>';
 			}
 
-			$output .= '</table>';
-
-			if (count($this->_data) > 1 && !empty($this->_actions))
-			{
-				$output .= '<div class="table-actions">';
-
-				foreach ($this->_actions as $action)
-				{
-					$output .= $action;
-				}
-
-				$output .= '</div>';
-			}
+			$output .= '</table></div>';
 
 			if (!empty($pagination))
 			{
-				$output .= $pagination;
+				$output .= '<div class="pull-right">'.$pagination.'</div>';
 			}
+
+			$output .= '<i>'.NeoFrag::loader()->lang('results', $count, $count).($count < $count_results ? NeoFrag::loader()->lang('results_total', $count_results) : '').'</i>';
 
 			if (!$this->_ajax)
 			{
-				$output = '<div class="table-area" data-table-id="'.$this->id.'">'.(isset($search_input) ? $search_input : '').'<div class="table-content">'.$output.'</div></div>';
+				$output = '<div class="table-area" data-table-id="'.$this->id.'"'.($this->config->ajax_url ? ' data-ajax-url="'.url($this->config->request_url).'"  data-ajax-post="'.http_build_query(post()).'"' : '').'>'.(isset($search_input) ? $search_input : '').'<div class="table-content">'.$output.'</div></div>';
 			}
 		}
 		
@@ -490,25 +479,16 @@ class Table extends Library
 
 		if ($this->_ajax)
 		{
-			$this->session->save();
-			echo $output;
-			return '';
+			header('Content-Type: application/json; charset=UTF-8');
+			exit(json_encode([
+				'search'  => array_values(array_unique($this->_words)),
+				'content' => $this->template->parse($output, NeoFrag::loader()->data)
+			]));
 		}
 		else
 		{
 			return $output;
 		}
-	}
-
-	public function is_ajax()
-	{
-		return $this->config->ajax_url && post('table_id');
-	}
-
-	public function get_output($output, $data)
-	{
-		$this->config->extension_url = 'json';
-		return json_encode(array('search' => array_values(array_unique($this->_words)), 'content' => $this->template->parse($output, $data)));
 	}
 
 	private function _is_searchable()
@@ -549,6 +529,6 @@ class Table extends Library
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./neofrag/libraries/table.php
 */

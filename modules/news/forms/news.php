@@ -11,64 +11,64 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-$rules = array(
-	'title' => array(
-		'label'         => 'Titre',
-		'value'         => $title,
+$rules = [
+	'title' => [
+		'label'         => '{lang title}',
+		'value'         => $this->form->value('title'),
 		'type'          => 'text',
 		'rules'			=> 'required'
-	),
-	'category' => array(
-		'label'         => 'Catégorie',
-		'value'         => $category_id,
-		'values'        => $categories,
+	],
+	'category' => [
+		'label'         => '{lang category}',
+		'value'         => $this->form->value('category_id'),
+		'values'        => $this->form->value('categories'),
 		'type'          => 'select',
 		'rules'			=> 'required'
-	),
-	'image' => array(
-		'label'       => 'Image',
-		'value'       => $image_id,
+	],
+	'image' => [
+		'label'       => '{lang image}',
+		'value'       => $this->form->value('image_id'),
 		'type'        => 'file',
 		'upload'      => 'news',
-		'info'        => ' d\'image (max. '.(file_upload_max_size() / 1024 / 1024).' Mo)',
+		'info'        => i18n('file_picture', file_upload_max_size() / 1024 / 1024),
 		'check'       => function($filename, $ext){
-			if (!in_array($ext, array('gif', 'jpeg', 'jpg', 'png')))
+			if (!in_array($ext, ['gif', 'jpeg', 'jpg', 'png']))
 			{
-				return 'Veuiller choisir un fichier d\'image';
+				return i18n('select_image_file');
 			}
 		}
-	),
-	'introduction' => array(
-		'label'			=> 'Introduction',
-		'value'			=> $introduction,
+	],
+	'introduction' => [
+		'label'			=> '{lang intro}',
+		'value'			=> $this->form->value('introduction'),
 		'type'			=> 'editor',
 		'rules'			=> 'required'
-	),
-	'content' => array(
-		'label'			=> 'Contenu',
-		'value'			=> $content,
+	],
+	'content' => [
+		'label'			=> '{lang content}',
+		'value'			=> $this->form->value('content'),
 		'type'			=> 'editor'
-	),
-	'tags' => array(
-		'label'			=> 'Mots clés',
-		'value'			=> $tags,
+	],
+	'tags' => [
+		'label'			=> '{lang tags}',
+		'value'			=> $this->form->value('tags'),
 		'type'			=> 'text'
-	),
-	'published' => array(
+	],
+	'published' => [
 		'type'			=> 'checkbox',
-		'checked'		=> array('on' => $published),
-		'values'        => array('on' => 'Publiée')
-	)
-);
+		'checked'		=> ['on' => $this->form->value('published')],
+		'values'        => ['on' => '{lang published}']
+	]
+];
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.2
 ./modules/news/forms/news.php
 */

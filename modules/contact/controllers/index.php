@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,58 +22,61 @@ class m_contact_c_index extends Controller_Module
 {
 	public function index()
 	{
-		$rules = array();
+		$rules = [];
 		
 		if (!$this->user())
 		{
-			$rules['email'] = array(
-				'label' => 'Adresse email',
+			$rules['email'] = [
+				'label' => $this('email'),
 				'type'  => 'email',
 				'rules' => 'required'
-			);
+			];
 		}
 		
-		$rules['subject'] = array(
-			'label' => 'Objet',
+		$rules['subject'] = [
+			'label' => $this('subject'),
 			'rules' => 'required'
-		);
+		];
 		
-		$rules['message'] = array(
-			'label' => 'Message',
+		$rules['message'] = [
+			'label' => $this('message'),
 			'type'  => 'editor',
 			'rules' => 'required'
-		);
+		];
 		
-		$this->title('Nous contacter')
-				->load->library('form')
+		$this->title($this('contact_us'))
+				->form
 				->display_required(FALSE)
 				->add_rules($rules)
-				->add_submit('{fa-icon enveloppe-o} Envoyer')
+				->add_captcha()
+				->add_submit(icon('fa-envelope-o').' '.$this('send'))
 				->add_back('index.html');
 		
 		if ($this->form->is_valid($post))
 		{
-			$this->load->library('email')
-				->from($this->user() ? $this->user('email') : $post['email'])
-				->to($this->config->nf_contact)
-				->subject('Contact :: '.$post['subject'])
-				->message('default', array(
-					'content' => bbcode($post['message']).($this->user() ? '<br /><br /><br />'.$this->user->link() : '')
-				))
-				->send();
+			$this	->email
+					->from($this->user() ? $this->user('email') : $post['email'])
+					->to($this->config->nf_contact)
+					->subject($this('contact').' :: '.$post['subject'])
+					->message('default', [
+						'content' => function() use ($post){
+							return bbcode($post['message']).($this->user() ? '<br /><br /><br />'.$this->user->link() : '');
+						}
+					])
+					->send();
 			
 			redirect();
 		}
 
-		return new Panel(array(
-			'title'   => 'Nous contacter',
+		return new Panel([
+			'title'   => $this('contact_us'),
 			'icon'    => 'fa-envelope-o',
 			'content' => $this->form->display()
-		));
+		]);
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./modules/contact/controllers/index.php
 */

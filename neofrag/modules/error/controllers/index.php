@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -24,52 +24,38 @@ class m_error_c_index extends Controller_Module
 	{
 		header('HTTP/1.0 404 Not Found');
 
-		$this->title('{lang unfound}');
+		$this->title($this->load->object->get_title($this('unfound')));
 
-		return array(
-			new Panel(array(
-				'title'   => '{lang unfound}',
+		return [
+			new Panel([
+				'title'   => $this('unfound'),
 				'icon'    => 'fa-warning',
 				'style'   => 'panel-danger',
-				'content' => '{lang page_unfound}'
-			)),
+				'content' => $this('page_unfound')
+			]),
 			new Button_back()
-		);
+		];
 	}
 
 	public function unauthorized()
 	{
 		header('HTTP/1.0 401 Unauthorized');
 
-		$this->title('{lang unauthorized}');
+		$this->title($this->load->object->get_title($this('unauthorized')));
 
-		return array(
-			new Panel(array(
-				'title'   => '{lang unauthorized}',
+		return [
+			new Panel([
+				'title'   => $this('unauthorized'),
 				'icon'    => 'fa-warning',
 				'style'   => 'panel-danger',
-				'content' => 'Vous n\'avez pas les autorisations d\'accès requises pour visiter cette page.'
-			)),
+				'content' => $this('required_permissions')
+			]),
 			new Button_back()
-		);
-	}
-
-	public function database()
-	{
-		header('HTTP/1.0 503 Service Unavailable');
-
-		$this->title('{lang database}');
-
-		return new Panel(array(
-			'title'   => '{lang database}',
-			'icon'    => 'fa-warning',
-			'style'   => 'panel-danger',
-			'content' => 'Le serveur de bases de données est injoignable ou ne répond pas.'
-		));
+		];
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/modules/error/controllers/index.php
 */

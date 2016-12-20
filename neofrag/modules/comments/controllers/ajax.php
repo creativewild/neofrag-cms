@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,9 +22,9 @@ class m_comments_c_ajax extends Controller_Module
 {
 	public function delete($comment_id, $module_id, $module)
 	{
-		$this	->title('Confirmation de suppression')
-				->load->library('form')
-				->confirm_deletion('Confirmation de suppression', 'Êtes-vous sûr(e) de vouloir supprimer ce commentaire ?');
+		$this	->title($this('delete_confirmation'))
+				->form
+				->confirm_deletion($this('delete_confirmation'), $this('comment_confirmation'));
 
 		if ($this->form->is_valid())
 		{
@@ -36,9 +36,9 @@ class m_comments_c_ajax extends Controller_Module
 			else
 			{
 				$this->db	->where('comment_id', $comment_id)
-							->update('nf_comments', array(
+							->update('nf_comments', [
 								'content' => NULL
-							));
+							]);
 			}
 
 			return 'OK';
@@ -49,6 +49,6 @@ class m_comments_c_ajax extends Controller_Module
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/modules/comments/controllers/ajax.php
 */

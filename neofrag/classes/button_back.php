@@ -11,31 +11,31 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-class Button_back
+class Button_Back
 {
 	private $_url;
 	private $_title;
 	
 	public function __construct($url = '', $title = '')
 	{
-		$this->_url   = NeoFrag::loader()->config->base_url.(NeoFrag::loader()->session->get_back() ?: $url);
+		$this->_url   = NeoFrag::loader()->session->get_back() ?: $url;
 		$this->_title = $title;
 	}
 
 	public function display($id = NULL)
 	{
-		return '<div class="panel panel-back"><a class="btn btn-default" href="'.$this->_url.'">'.($this->_title ?: 'Retour').'</a></div>';
+		return '<div class="panel panel-back"><a class="btn btn-default" href="'.url($this->_url).'">'.($this->_title ?: NeoFrag::loader()->lang('back')).'</a></div>';
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.4
 ./neofrag/classes/button_back.php
 */

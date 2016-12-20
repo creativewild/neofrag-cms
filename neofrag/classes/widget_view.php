@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -32,7 +32,7 @@ class Widget_View
 	{
 		static $widgets;
 
-		if (is_null($widgets))
+		if ($widgets === NULL)
 		{
 			foreach (NeoFrag::loader()->db->from('nf_widgets')->get() as $widget)
 			{
@@ -42,20 +42,22 @@ class Widget_View
 		
 		$widget = $widgets[$this->widget_id];
 		
-		$this->title    = $widget['title'];
-		$this->settings = unserialize($widget['settings']);
+		$output   = [];
 		
-		$output   = array();
-		$instance = NeoFrag::loader()->widget($widget['widget']);
-		$result   = $instance->get_output($widget['type'], $this->settings);
+		if (!$instance = NeoFrag::loader()->widget($widget['widget']))
+		{
+			return;
+		}
+		
+		$result = $instance->get_output($widget['type'], is_array($settings = unserialize($widget['settings'])) ? $settings : []);
 		
 		foreach ($result as $result)
 		{
 			if (is_a($result, 'Panel'))
 			{
-				if ($this->title)
+				if (strlen($widget['title']))
 				{
-					$result->title = $this->title;
+					$result->title = $widget['title'];
 				}
 				
 				if (isset($this->style))
@@ -75,7 +77,7 @@ class Widget_View
 		{
 			$type   = 'module';
 			$module = NeoFrag::loader()->module;
-			$name   = $module->get_name();
+			$name   = $module->name;
 		}
 		else
 		{
@@ -83,11 +85,11 @@ class Widget_View
 			$name = $widget['widget'];
 		}
 		
-		return '<div class="'.$type.' '.$type.'-'.$name.(!is_null($id) ? ' live-editor-widget" data-widget-id="'.$id.'" data-title="'.(!empty($module) ? $module->name : $instance->name).'"' : '"').'>'.implode($output).'</div>';
+		return '<div class="'.$type.' '.$type.'-'.$name.($id !== NULL ? ' live-editor-widget" data-widget-id="'.$id.'" data-title="'.(!empty($module) ? $module->get_title() : $instance->get_title()).'"' : '"').'>'.display($output).'</div>';
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/classes/widget_view.php
 */

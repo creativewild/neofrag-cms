@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,23 +22,19 @@ class m_news_c_checker extends Controller_Module
 {
 	public function index($page = '')
 	{
-		return array($this->load->library('pagination')->fix_items_per_page($this->config->news_per_page)->get_data($this->model()->get_news(), $page));
+		return [$this->pagination->fix_items_per_page($this->config->news_per_page)->get_data($this->model()->get_news(), $page)];
 	}
 
 	public function _tag($tag, $page = '')
 	{
-		return array($tag, $this->load->library('pagination')->fix_items_per_page($this->config->news_per_page)->get_data($this->model()->get_news('tag', $tag), $page));
+		return [$tag, $this->pagination->fix_items_per_page($this->config->news_per_page)->get_data($this->model()->get_news('tag', $tag), $page)];
 	}
 
 	public function _category($category_id, $name, $page = '')
 	{
 		if ($category = $this->model('categories')->check_category($category_id, $name))
 		{
-			return array($category['title'], $this->load->library('pagination')->fix_items_per_page($this->config->news_per_page)->get_data($this->model()->get_news('category', $category_id), $page));
-		}
-		else
-		{
-			throw new Exception(NeoFrag::UNFOUND);
+			return [$category['title'], $this->pagination->fix_items_per_page($this->config->news_per_page)->get_data($this->model()->get_news('category', $category_id), $page)];
 		}
 	}
 
@@ -48,14 +44,10 @@ class m_news_c_checker extends Controller_Module
 		{
 			return $news;
 		}
-		else
-		{
-			throw new Exception(NeoFrag::UNFOUND);
-		}
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./modules/news/controllers/checker.php
 */

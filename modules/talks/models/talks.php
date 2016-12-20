@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,9 +22,9 @@ class m_talks_m_talks extends Model
 {
 	public function get_messages($talks_id, $message_id = 0, $limit = FALSE)
 	{
-		$this->db	->select('m.*', 'u.username', 'up.avatar', 'up.sex')
+		$this->db	->select('m.message_id', 'm.talk_id', 'u.user_id', 'm.message', 'm.date', 'u.username', 'up.avatar', 'up.sex')
 					->from('nf_talks_messages m')
-					->join('nf_users u', 'u.user_id = m.user_id')
+					->join('nf_users u', 'u.user_id = m.user_id AND u.deleted = "0"')
 					->join('nf_users_profiles up', 'u.user_id = up.user_id');
 					
 		if ($message_id && !$limit)
@@ -71,24 +71,21 @@ class m_talks_m_talks extends Model
 		}
 	}
 	
-	public function add_talk($title, $is_private)
+	public function add_talk($title)
 	{
-		$talk_id = $this->db->insert('nf_talks', array(
+		$talk_id = $this->db->insert('nf_talks', [
 			'name' => $title
-		));
+		]);
 		
-		$this->_talk_permission($talk_id, $is_private); 
+		$this->access->init('talks', 'talks', $talk_id);
 	}
 	
-	public function edit_talk($talk_id, $title, $is_private)
+	public function edit_talk($talk_id, $title)
 	{
 		$this->db	->where('talk_id', $talk_id)
-					->update('nf_talks', array(
+					->update('nf_talks', [
 						'name' => $title
-					));
-		
-		delete_permission('talks', $talk_id);
-		$this->_talk_permission($talk_id, $is_private);
+					]);
 	}
 	
 	public function delete_talk($talk_id)
@@ -96,34 +93,11 @@ class m_talks_m_talks extends Model
 		$this->db	->where('talk_id', $talk_id)
 					->delete('nf_talks');
 		
-		delete_permission('talks', $talk_id);
-	}
-	
-	private function _talk_permission($talk_id, $is_private)
-	{
-		$permissions = array('write' => 'members', 'delete' => 'admins');
-		
-		if ($is_private)
-		{
-			$permissions = array_merge($permissions, array(
-				'read' => ''
-			));
-		}
-		
-		foreach ($permissions as $permission => $group)
-		{
-			add_permission('talks', $talk_id, $permission, array(
-				array(
-					'entity_id'  => $is_private ? $this->groups()['admins']['id'] : $this->groups()[$group]['id'],
-					'type'       => 'group',
-					'authorized' => TRUE
-				)
-			));
-		}
+		$this->access->delete('talks', $talk_id);
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./modules/talks/models/talks.php
 */

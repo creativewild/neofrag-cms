@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,38 +20,20 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class m_search_c_index extends Controller_Module
 {
-	public function index($search = '', $module_name = '', $page = '')
+	public function index($module_name = '', $page = '')
 	{
-		$this	->title('Rechercher');
+		$this->title($this('search'));
 
-		$this->load	->library('form')
-					->add_rules(array(
-						'keywords' => array(
-							'type'          => 'text',
-							'rules'			=> 'required'
-						)
-					));
+		$count  = 0;
+		$row    = [];
+		$search = '';
 
-		if ($keywords = post('keywords'))
+		if (!empty($_GET['q']) && ($search = rawurldecode($_GET['q'])))
 		{
-			redirect('search/'.rawurlencode($keywords).'.html');
-		}
-		else if ($search)
-		{
-			$value = $search;
-		}
-		else
-		{
-			$value = '';
-		}
+			$keywords = $not_keywords = [];
+			$results  = [];
 
-		if ($value)
-		{
-			$keywords = $not_keywords = array();
-			$results  = array();
-			$count    = 0;
-
-			foreach (array_map($trim = create_function('$a', 'return trim($a, \';,."\\\'\');'), preg_split('/[\s;,.]*(-?"[^"]+")[\s;,.]*|[\s;,.]*(-?\'[^\']+\')[\s;,.]*|[\s;,.]+/', $value, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE)) as $keyword)
+			foreach (array_map($trim = create_function('$a', 'return trim($a, \';,."\\\'\');'), preg_split('/[\s;,.]*(-?"[^"]+")[\s;,.]*|[\s;,.]*(-?\'[^\']+\')[\s;,.]*|[\s;,.]+/', $search, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE)) as $keyword)
 			{
 				if (substr($keyword, 0, 1) == '-')
 				{
@@ -68,90 +50,131 @@ class m_search_c_index extends Controller_Module
 
 			if ($keywords)
 			{
-				foreach ($this->get_modules() as $module)
+				$queries = [
+					[$not_keywords, 'NOT LIKE', 'AND'],
+					[$keywords,     'LIKE',     'OR']
+				];
+				
+				foreach ($this->addons->get_modules() as $module)
 				{
-					if (($search_controller = $module->load->controller('search')) && ($result = $search_controller->search($keywords, $not_keywords)))
+					if (($search_controller = $module->load->controller('search')) && ($columns = $search_controller->search()))
 					{
-						$results[$module->load->template->parse($search_controller->name, array(), $module->load)] = array($module, $search_controller, $result);
-						$count += count($result);
+						foreach ($queries as $query)
+						{
+							if ($query[0])
+							{
+								$args = [];
+								
+								foreach ($query[0] as $keyword)
+								{
+									foreach ($columns as $col)
+									{
+										array_push($args, $col.' '.$query[1],  '%'.addcslashes($keyword, '%_').'%', $query[2]);
+									}
+								}
+
+								call_user_func_array([$this->db, 'where'], $args);
+							}
+						}
+
+						if ($c = count($result = $this->db->get()))
+						{
+							$results[] = [$module, $search_controller, $result, $c];
+							$count += $c;
+						}
 					}
 				}
 			}
 
-			ksort($results);
-
-			if ($count == 0)
+			if ($count)
 			{
-				echo $this->load->view('unfound');
-			}
-			else
-			{
-				if ($count == 1)
+				array_natsort($results, function($a){
+					return $a[0]->get_title();
+				});
+				
+				$panels = [];
+				
+				foreach ($results as $result)
 				{
-					$this->add_data('search_count', '1 résultat trouvé');
-				}
-				else
-				{
-					$this->add_data('search_count', $count.' résultats trouvés');
-				}
+					$content = [];
+					$details = FALSE;
 
-				if (1 || count($results) > 1)
-				{
-					$modules = array();
-					foreach ($results as $title => $result)
+					if (($name = url_title($result[0]->name)) == $module_name)
 					{
-						if (($name = url_title($result[0]->get_name())) == $module_name)
+						foreach ($this->pagination->fix_items_per_page(10)->get_data($result[2], $page) as $data)
 						{
-							$display = $result[0]->load->template->parse($result[1]->method('detail', array($result[2])), array(), $result[0]->load);
-							$details = TRUE;
-						}
-						else if (!$module_name)
-						{
-							$display = $result[0]->load->template->parse($result[1]->method('index', array($result[2])), array(), $result[0]->load);
-						}
-						else
-						{
-							$display = '';
+							$content[] = $result[1]->method('detail', [$data, $keywords]);
 						}
 
-						$modules[] = array(
-							'name'    => $name,
-							'title'   => $title.' ('.count($result[2]).')',
-							'display' => $display
-						);
+						$details = TRUE;
 					}
-
-					echo $this->load->view('results', array(
-						'search'  => rawurlencode($value),
-						'modules' => $modules,
-						'details' => isset($details)
-					));
+					else if (!$module_name)
+					{
+						foreach (array_slice($result[2], 0, 3) as $data)
+						{
+							$content[] = $result[1]->method('index', [$data, $keywords]);
+						}
+					}
+					
+					if ($content)
+					{
+						$panels[] = new Panel([
+							'title'   => icon($result[0]->icon).' '.$result[0]->get_title(),
+							'url'     => 'search/'.$result[0]->name.'.html?q='.rawurlencode($search),
+							'content' => implode('<hr />', $content),
+							'footer'  => (!$details && $result[3] > 3) ? '<a href="'.url('search/'.$result[0]->name.'.html?q='.rawurlencode($search)).'" class="btn btn-default btn-sm">'.$this('see_all_results').'</a>' : ''
+						]);
+					}
+					
+					if ($details && $pagination = $this->pagination->get_pagination())
+					{
+						$panels[] = new Panel([
+							'content' => $pagination,
+							'body'    => FALSE,
+							'style'   => 'panel-back'
+						]);
+					}
 				}
-				else
+				
+				if (!$panels)
 				{
-
+					redirect('search.html?q='.rawurlencode($search));
 				}
+
+				$row[] = new Row(
+					new Col(
+						new Panel([
+							'body'    => FALSE,
+							'content' => $this->load->view('results', [
+								'keywords' => $search,
+								'results'  => $results,
+								'count'    => $count
+							])
+						]),
+						'col-md-3'
+					),
+					new Col($panels, 'col-md-9')
+				);
 			}
 		}
-		else
-		{
-			$value = '';
-			echo $this->load->view('index');
-		}
 
-		$source = $this->db ->select('CONCAT("\"", keyword, "\"")')
-							->from('nf_search_keywords')
-							->order_by('count DESC')
-							->get();
-
-		$this->subtitle($this->load->view('search', array(
-			'source' => utf8_htmlentities('['.trim_word(implode(', ', $source), ', ').']'),
-			'value'  => utf8_htmlentities($value)
-		)));
+		return array_merge([
+			new Row(
+				new Col(
+					new Panel([
+						'title'   => $this('search'),
+						'icon'    => 'fa-search',
+						'content' => $this->load->view('index', [
+							'results'  => (bool)$count,
+							'keywords' => $search
+						])
+					])
+				)
+			)], $row);
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./neofrag/modules/search/controllers/index.php
 */

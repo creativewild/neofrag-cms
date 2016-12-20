@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -23,9 +23,9 @@ class Session extends Core
 	private $_ip_address;
 	private $_host_name;
 	private $_session_id;
-	private $_user_data = array();
+	private $_user_data = [];
 	private $_user_id   = NULL;
-	private	$_sessions;
+	private $_sessions;
 
 	public function __construct()
 	{
@@ -34,8 +34,6 @@ class Session extends Core
 		$this->db	->where('remember_me', FALSE)
 					->where('UNIX_TIMESTAMP(last_activity) <', time() - strtoseconds($this->config->nf_cookie_expire))
 					->delete('nf_sessions');
-
-		statistics('nf_sessions_max_simultaneous', $this->_sessions = $this->db->select('COUNT(DISTINCT IFNULL(user_id, session_id))')->from('nf_sessions')->where('last_activity > DATE_SUB(NOW(), INTERVAL 5 MINUTE)')->row(), function($a, $b){ return $a > $b; });
 
 		$this->_ip_address = isset($_SERVER['HTTP_X_REAL_IP']) ? $_SERVER['HTTP_X_REAL_IP'] : $_SERVER['REMOTE_ADDR'];
 		$this->_host_name  = utf8_string(gethostbyaddr($this->_ip_address));
@@ -52,50 +50,54 @@ class Session extends Core
 			}
 
 			$this->db	->where('session_id', $cookie)
-						->update('nf_sessions', array(
+						->update('nf_sessions', [
 							'session_id'    => $this->_session_id,
 							'ip_address'    => $this->_ip_address,
 							'host_name'     => $this->_host_name,
 							'last_activity' => now()
-						));
-
-			if (!is_null($time_zone = $this('session', 'time_zone')))
-			{
-				set_time_zone($time_zone);
-				$this->db->update_time_zone();
-			}
+						]);
 		}
-		else if (!$this->assets->is_asset() && !$this->config->ajax_url)
+		else if (!is_asset() && !$this->config->ajax_url && !$this->config->ajax_header && $_SERVER['REQUEST_METHOD'] != 'OPTIONS')
 		{
 			$this->_session_id();
+			
+			$crawler = is_crawler();
+			
+			if ($crawler !== FALSE)
+			{
+				$this->db->insert('nf_crawlers', [
+					'name' => $crawler,
+					'path' => $this->config->request_url
+				]);
+			}
 
-			$this->db->insert('nf_sessions', array(
+			$this->db->insert('nf_sessions', [
 				'session_id' => $this->_session_id,
 				'ip_address' => $this->_ip_address,
-				'host_name'  => $this->_host_name
-			));
+				'host_name'  => $this->_host_name,
+				'is_crawler' => $crawler !== FALSE,
+				'user_data'  => ''
+			]);
 			
 			$this->_user_data['session']['date']       = time();
 			$this->_user_data['session']['javascript'] = FALSE;
-			$this->_user_data['session']['referer']    = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
-			$this->_user_data['session']['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
+			$this->_user_data['session']['referer']    = isset($_SERVER['HTTP_REFERER'])    ? $_SERVER['HTTP_REFERER']    : '';
+			$this->_user_data['session']['user_agent'] = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
 		}
+
+		statistics('nf_sessions_max_simultaneous', $this->_sessions = $this->db->select('COUNT(DISTINCT IFNULL(user_id, session_id))')->from('nf_sessions')->where('last_activity > DATE_SUB(NOW(), INTERVAL 5 MINUTE)')->where('is_crawler', FALSE)->row(), function($a, $b){ return $a > $b; });
 	}
 	
 	public function __destruct()
 	{
-		if ($this->assets->is_asset() || $this->config->ajax_url)
+		if (!is_asset() && !$this->config->ajax_url && !$this->config->ajax_header && $_SERVER['REQUEST_METHOD'] != 'OPTIONS')
 		{
-			return;
-		}
-		
-		if (in_array($this->_get_url(), array('index.html', 'admin.html')) || empty($_SERVER['HTTP_REFERER']))
-		{
-			$this->_user_data['session']['history'] = array($this->_get_url());
-		}
-		else if (empty($this->_user_data['session']['history']) || end($this->_user_data['session']['history']) != $this->_get_url())
-		{
-			if (prev($this->_user_data['session']['history']) == $this->_get_url())
+			if (in_array($this->_get_url(), ['index.html', 'admin.html']) || empty($_SERVER['HTTP_REFERER']))
+			{
+				$this->_user_data['session']['history'] = [];
+			}
+
+			if (!empty($this->_user_data['session']['history']) && end($this->_user_data['session']['history']) != $this->_get_url() && prev($this->_user_data['session']['history']) == $this->_get_url())
 			{
 				array_pop($this->_user_data['session']['history']);
 			}
@@ -113,7 +115,7 @@ class Session extends Core
 		$args  = func_get_args();
 		$count = func_num_args();
 
-		if ($count == 1 && in_array($args[0], array('session_id', 'user_id', 'ip_address', 'host_name')))
+		if ($count == 1 && in_array($args[0], ['session_id', 'user_id', 'ip_address', 'host_name']))
 		{
 			$var = '_'.$args[0];
 			return $this->$var;
@@ -131,16 +133,16 @@ class Session extends Core
 	private function _session_id()
 	{
 		$this->_session_id = unique_id($this->db->select('session_id')->from('nf_sessions')->get());
-		setcookie($this->config->nf_cookie_name, $this->_session_id, strtotime('+1 year'), $this->config->base_url);
+		setcookie($this->config->nf_cookie_name, $this->_session_id, strtotime('+1 year'), url(), '', !empty($_SERVER['HTTPS']), TRUE);
 	}
 
 	public function save()
 	{
 		$this->db	->where('session_id', $this->_session_id)
-					->update('nf_sessions', array(
+					->update('nf_sessions', [
 						'user_data' => !empty($this->_user_data) ? serialize($this->_user_data) : '',
 						'user_id'   => $this->_user_id
-					));
+					]);
 
 		return $this;
 	}
@@ -212,17 +214,16 @@ class Session extends Core
 	{
 		$this->_user_id = $user_id;
 		
-		if (!is_null($user_id))
+		if ($user_id !== NULL)
 		{
-			$this->db->insert('nf_sessions_history', array(
+			$this->db->insert('nf_sessions_history', [
 				'session_id' => $this->_session_id,
 				'user_id'    => $user_id,
 				'ip_address' => $this->_ip_address,
 				'host_name'  => $this->_host_name,
 				'referer'    => $this->_user_data['session']['referer'],
-				'user_agent' => $this->_user_data['session']['user_agent'],
-				'date'       => now()
-			));
+				'user_agent' => $this->_user_data['session']['user_agent']
+			]);
 		}
 
 		return $this;
@@ -251,9 +252,9 @@ class Session extends Core
 	public function remember_me($remember_me)
 	{
 		$this->db	->where('session_id', $this->_session_id)
-					->update('nf_sessions', array(
+					->update('nf_sessions', [
 						'remember_me' => $remember_me
-					));
+					]);
 
 		return $this;
 	}
@@ -261,10 +262,10 @@ class Session extends Core
 	public function disconnect($session_id)
 	{
 		$this->db	->where('session_id', $session_id)
-					->update('nf_sessions', array(
+					->update('nf_sessions', [
 						'user_id'     => NULL,
 						'remember_me' => FALSE
-					));
+					]);
 
 		return $this;
 	}
@@ -273,9 +274,14 @@ class Session extends Core
 	{
 		static $url;
 		
-		if (is_null($url))
+		if ($url === NULL)
 		{
-			$url = preg_replace('#'.implode('|', array(Module::$patterns['pages'], Module::$patterns['page'])).'#', '', $this->config->request_url);
+			$url = $this->config->request_url;
+			
+			if (preg_match('#('.($patern = implode('|', [self::$route_patterns['pages'], self::$route_patterns['page']])).')\.html$#', $url, $match) && $match[1])
+			{
+				$url = preg_replace('#'.$patern.'#', '', $url);
+			}
 		}
 		
 		return $url;
@@ -298,7 +304,7 @@ class Session extends Core
 				return FALSE;
 			}
 
-			if (!is_null($session['user_id']))
+			if ($session['user_id'] !== NULL)
 			{
 				$this->_user_id = (int)$session['user_id'];
 			}
@@ -319,24 +325,13 @@ class Session extends Core
 		return $this->_sessions;
 	}
 	
-	public function profiler()
+	public function debugbar()
 	{
-		if (!$this->_user_data)
-		{
-			return '';
-		}
-
-		ksort($this->_user_data);
-
-		$output = '	<a href="#" data-profiler="session"><i class="icon-chevron-'.(!empty($this->_user_data['profiler']['session']) ? 'down' : 'up').' pull-right"></i></a>
-					<h2>Session</h2>
-					<div class="profiler-block">'.$this->profiler->table($this->_user_data).'</div>';
-
-		return $output;
+		return $this->debug->table($this->_user_data);
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./neofrag/core/session.php
 */

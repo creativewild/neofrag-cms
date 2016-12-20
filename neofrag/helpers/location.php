@@ -11,22 +11,32 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
+function url($url = '')
+{
+	if (substr($url, 0, 1) == '#')
+	{
+		$url = NeoFrag::loader()->config->request_url.$url;
+	}
+	
+	return NeoFrag::loader()->config->base_url.$url;
+}
+
 function redirect($location = '')
 {
-	header('Location: '.NeoFrag::loader()->config->base_url.$location);
+	header('Location: '.url($location));
 	exit;
 }
 
 function redirect_back($default = '')
 {
-	header('Location: '.NeoFrag::loader()->config->base_url.(NeoFrag::loader()->session->get_back() ?: $default));
+	header('Location: '.url(NeoFrag::loader()->session->get_back() ?: $default));
 	exit;
 }
 
@@ -42,6 +52,6 @@ function urltolink($url)
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.4
 ./neofrag/helpers/location.php
 */

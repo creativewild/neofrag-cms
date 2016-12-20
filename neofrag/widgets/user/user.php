@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,7 +20,7 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class w_user extends Widget
 {
-	public $name        = 'Espace membre';
+	public $title       = '{lang member_area}';
 	public $description = '';
 	public $link        = 'http://www.neofrag.com';
 	public $author      = 'Michaël Bilcot <michael.bilcot@neofrag.com>';
@@ -28,14 +28,13 @@ class w_user extends Widget
 	public $version     = 'Alpha 0.1';
 	public $nf_version  = 'Alpha 0.1';
 	public $path        = __FILE__;
-	public $types       = array(
-		'index'          => 'Espace membre',
-		'index_mini'     => 'Espace membre (mini)',
-		//'messages_inbox' => 'Messagerie privée'
-	);
+	public $types       = [
+		'index'      => '{lang member_area}',
+		'index_mini' => '{lang member_area_mini}'
+	];
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/widgets/user/user.php
 */

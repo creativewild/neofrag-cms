@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,108 +22,111 @@ class m_talks_c_admin extends Controller_Module
 {
 	public function index($talks)
 	{
-		$this	->load->library('table')
-				->add_columns(array(
-					array(
+		$this	->table
+				->add_columns([
+					[
+						'title'   => $this('talks'),
 						'content' => function($data){
-							return NeoFrag::loader()->assets->icon(NeoFrag::loader()->db->select('entity_id')->from('nf_permissions p')->join('nf_permissions_details d', 'p.permission_id = d.permission_id')->where('addon_id', $data['talk_id'])->where('addon', 'talks')->where('action', 'write')->row() == NeoFrag::loader()->groups()['admins']['id'] ? 'fa-lock' : 'fa-unlock');
+							return $data['name'];
 						},
-						'size'    => TRUE
-					),
-					array(
-						'title'   => 'Discussion',
-						'content' => '{name}',
-						'sort'    => '{name}',
-						'search'  => '{name}'
-					),
-					array(
-						'content' => array(
+						'sort'    => function($data){
+							return $data['name'];
+						},
+						'search'  => function($data){
+							return $data['name'];
+						}
+					],
+					[
+						'content' => [
 							function($data){
 								if ($data['talk_id'] > 1)
 								{
-									return button_edit('{base_url}admin/talks/{talk_id}/{url_title(name)}.html');
+									return button_access($data['talk_id'], 'talk');
 								}
 							},
 							function($data){
 								if ($data['talk_id'] > 1)
 								{
-									return button_delete('{base_url}admin/talks/delete/{talk_id}/{url_title(name)}.html');
+									return button_edit('admin/talks/'.$data['talk_id'].'/'.url_title($data['name']).'.html');
+								}
+							},
+							function($data){
+								if ($data['talk_id'] > 1)
+								{
+									return button_delete('admin/talks/delete/'.$data['talk_id'].'/'.url_title($data['name']).'.html');
 								}
 							}
-						),
+						],
 						'size'    => TRUE
-					)
-				))
+					]
+				])
 				->data($talks)
-				->no_data('Il n\'y a pas encore de discussion');
+				->no_data($this('no_talks'));
 						
-		return new Panel(array(
-			'title'   => 'Liste des discussions',
+		return new Panel([
+			'title'   => $this('talks_list'),
 			'icon'    => 'fa-comment-o',
 			'content' => $this->table->display(),
-			'footer'  => button_add('{base_url}admin/talks/add.html', 'Créer une discussion')
-		));
+			'footer'  => button_add('admin/talks/add.html', $this('create_talk'))
+		]);
 	}
 	
 	public function add()
 	{
-		$this	->subtitle('Ajouter une discussion')
-				->load->library('form')
+		$this	->subtitle($this('add_talk'))
+				->form
 				->add_rules('talks')
-				->add_submit('Ajouter')
+				->add_submit($this('add'))
 				->add_back('admin/talks.html');
 
 		if ($this->form->is_valid($post))
 		{
-			$this->model()->add_talk($post['title'], in_array('on', $post['private']));
+			$this->model()->add_talk($post['title']);
 			
-			add_alert('Succes', 'Discussion ajoutée avec succès');
+			notify($this('add_success_message'));
 
 			redirect_back('admin/talks.html');
 		}
 		
-		return new Panel(array(
-			'title'   => 'Ajouter une discussion',
+		return new Panel([
+			'title'   => $this('add_talk'),
 			'icon'    => 'fa-comment-o',
 			'content' => $this->form->display()
-		));
+		]);
 	}
 
 	public function _edit($talk_id, $title)
 	{
 		$this	->subtitle($title)
-				->load->library('form')
-				->add_rules('talks', array(
-					'title'   => $title,
-					'private' => $this->db->select('entity_id')->from('nf_permissions p')->join('nf_permissions_details d', 'p.permission_id = d.permission_id')->where('addon_id', $talk_id)->where('addon', 'talks')->where('action', 'write')->row() == $this->groups()['admins']['id']
-				))
-				->add_submit('Éditer')
+				->form
+				->add_rules('talks', [
+					'title' => $title
+				])
+				->add_submit($this('edit'))
 				->add_back('admin/talks.html');
 		
 		if ($this->form->is_valid($post))
 		{	
-			$this->model()->edit_talk(	$talk_id,
-										$post['title'],
-										in_array('on', $post['private']));
+			$this->model()->edit_talk($talk_id, $post['title']);
 		
-			add_alert('Succes', 'Discussion éditée avec succès');
+			notify($this('edit_success_message'));
 
 			redirect_back('admin/talks.html');
 		}
 		
-		return new Panel(array(
-			'title'   => 'Édition de la discussion',
+		return new Panel([
+			'title'   => $this('edit_talk'),
 			'icon'    => 'fa-comment-o',
 			'content' => $this->form->display()
-		));
+		]);
 	}
 	
 	public function delete($talk_id, $title)
 	{
-		$this	->title('Suppression d\'une discussion')
+		$this	->title($this('delete_talk_title'))
 				->subtitle($title)
-				->load->library('form')
-				->confirm_deletion('Confirmation de suppression', 'Êtes-vous sûr(e) de vouloir supprimer la discussion <b>'.$title.'</b> ?');
+				->form
+				->confirm_deletion($this('delete_confirmation'), $this('delete_talk', $title));
 
 		if ($this->form->is_valid())
 		{
@@ -137,6 +140,6 @@ class m_talks_c_admin extends Controller_Module
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./modules/talks/controllers/admin.php
 */

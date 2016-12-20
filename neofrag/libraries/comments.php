@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -33,7 +33,7 @@ class Comments extends Library
 	{
 		if ($link)
 		{
-			return '<a href="{base_url}admin/comments/'.url_title($module_name).'/'.$module_id.'.html">'.$this->count_comments($module_name, $module_id).'</a>';
+			return '<a href="'.url('admin/comments/'.url_title($module_name).'/'.$module_id.'.html').'">'.$this->count_comments($module_name, $module_id).'</a>';
 		}
 		else
 		{
@@ -54,14 +54,14 @@ class Comments extends Library
 	{
 		$this	->css('neofrag.comments')
 				->js('neofrag.comments')
-				->load->library('form')
-				->add_rules(array(
-					'comment_id' => array(
-					),
-					'comment' => array(
+				->form
+				->add_rules([
+					'comment_id' => [
+					],
+					'comment' => [
 						'rules' => 'required'
-					)
-				));
+					]
+				]);
 		
 		if ($this->form->is_valid($post))
 		{
@@ -72,20 +72,20 @@ class Comments extends Library
 				$parent_id = $post['comment_id'];
 			}
 			
-			$comment_id = $this->db->insert('nf_comments', array(
+			$comment_id = $this->db->insert('nf_comments', [
 				'parent_id' => $parent_id,
 				'user_id'   => $this->user('user_id'),
 				'module_id' => $module_id,
 				'module'    => $module_name,
 				'content'   => $post['comment']
-			));
+			]);
 			
 			redirect($this->config->request_url.'#comment-'.$comment_id);
 		}
 
-		$comments = $this->db	->select('c.*', 'u.username', 'up.avatar', 'up.sex')
+		$comments = $this->db	->select('c.comment_id', 'c.parent_id', 'u.user_id', 'c.module_id', 'c.module', 'c.content', 'c.date', 'u.username', 'up.avatar', 'up.sex')
 								->from('nf_comments c')
-								->join('nf_users u', 'u.user_id = c.user_id')
+								->join('nf_users u', 'u.user_id = c.user_id AND u.deleted = "0"')
 								->join('nf_users_profiles up', 'u.user_id = up.user_id')
 								->where('module', $module_name)
 								->where('module_id', $module_id)
@@ -101,30 +101,30 @@ class Comments extends Library
 		
 		$count = count($comments);
 		
-		$panels = array();
+		$panels = [];
 		
 		if ($errors = $this->form->get_errors())
 		{
-			$panels[] = new Panel(array(
-				'title'   => '<a name="comments"></a>Veuillez remplir un message',
+			$panels[] = new Panel([
+				'title'   => '<a name="comments"></a>'.NeoFrag::loader()->lang('message_needed'),
 				'icon'    => 'fa-warning',
 				'style'   => 'panel-danger'
-			));
+			]);
 		}
 		
-		$panels[] = new Panel(array(
-			'title'   => '<a name="comments"></a>'.$count.' '.($count > 1 ? 'Commentaires' : 'Commentaire'),
+		$panels[] = new Panel([
+			'title'   => '<a name="comments"></a>'.NeoFrag::loader()->lang('comments', $count, $count),
 			'icon'    => 'fa-comments-o',
-			'content' => $output.$this->load->view('new', array(
-				'form_id' => $this->form->id
-			))
-		));
+			'content' => $output.$this->load->view('new', [
+				'form_id' => $this->form->token()
+			])
+		]);
 		
 		return display($panels);
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.2
 ./neofrag/libraries/comments.php
 */

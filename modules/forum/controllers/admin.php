@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,29 +22,30 @@ class m_forum_c_admin extends Controller_Module
 {
 	public function index()
 	{
-		$this	->subtitle('Liste des forums')
+		$this	->subtitle($this('forums_list'))
+				->css('forum')
 				->js('forum')
-				->add_action('{base_url}admin/forum/categories/add.html', 'Ajouter une catégorie', 'fa-plus')
-				->add_action('{base_url}admin/forum/add.html', 'Ajouter un forum', 'fa-plus');
+				->add_action('admin/forum/categories/add.html', $this('add_category'), 'fa-plus')
+				->add_action('admin/forum/add.html',            $this('add_forum'),    'fa-plus');
 		
-		$panels = array();
+		$panels = [];
 		
 		foreach ($this->model()->get_categories() as $category)
 		{
-			$panels[] = new Panel(array(
+			$panels[] = new Panel([
 				'content' => $this->load->view('index', $category),
 				'body'    => FALSE
-			));
+			]);
 		}
 		
 		if (empty($panels))
 		{
-			$panels[] = new Panel(array(
-				'title'   => 'Forum',
+			$panels[] = new Panel([
+				'title'   => $this('forum'),
 				'icon'    => 'fa-comments',
 				'style'   => 'panel-info',
-				'content' => '<div class="text-center">Il n\'y a pas de forum pour le moment</div>'
-			));
+				'content' => '<div class="text-center">'.$this('no_forum').'</div>'
+			]);
 		}
 
 		return '<div id="forums-list">'.display($panels).'</div>';
@@ -52,73 +53,99 @@ class m_forum_c_admin extends Controller_Module
 	
 	public function add()
 	{
-		$this	->subtitle('Ajouter un forum')
-				->load->library('form')
-				->add_rules('forum', array(
+		$this	->subtitle($this('add_forum'))
+				->form
+				->add_rules('forum', [
 					'categories' => $this->model()->get_categories_list(),
-				))
-				->add_submit('Ajouter')
+				])
+				->add_submit($this('add'))
 				->add_back('admin/forum.html');
 
 		if ($this->form->is_valid($post))
 		{
 			$this->model()->add_forum(	$post['title'],
 										$post['category'],
-										$post['description']);
+										$post['description'],
+										$post['url']);
 
-			add_alert('Succes', 'Forum ajouté');
+			notify($this('add_forum_success'));
 
 			redirect_back('admin/forum.html');
 		}
 
-		return new Panel(array(
-			'title'   => 'Ajouter un forum',
+		return new Panel([
+			'title'   => $this('add_forum'),
 			'icon'    => 'fa-comments',
 			'content' => $this->form->display()
-		));
+		]);
 	}
 
-	public function _edit($forum_id, $title, $description, $url, $category_id, $category_title)
+	public function _edit($forum_id, $title, $description, $parent_id, $is_subforum, $url)
 	{
-		$this	->title('&Eacute;dition')
+		$this	->title($this('edit_forum'))
 				->subtitle($title)
-				->load->library('form')
-				->add_rules('forum', array(
+				->form
+				->add_rules('forum', [
 					'title'        => $title,
 					'description'  => $description,
-					'category_id'  => $category_id,
-					'categories'   => $this->model()->get_categories_list()
-				))
-				->add_submit('Éditer')
+					'category_id'  => ($is_subforum ? 'f' : '').$parent_id,
+					'categories'   => $this->model()->get_categories_list($forum_id),
+					'url'          => $url
+				])
+				->add_submit($this('edit'))
 				->add_back('admin/forum.html');
 
 		if ($this->form->is_valid($post))
 		{
 			$this->db	->where('forum_id', $forum_id)
-						->update('nf_forum', array(
+						->update('nf_forum', [
 							'title'       => $post['title'],
-							'parent_id'   => $post['category'],
+							'parent_id'   => $this->model()->get_parent_id($post['category'], $is_subforum),
+							'is_subforum' => $is_subforum,
 							'description' => $post['description']
-						));
+						]);
 
-			add_alert('Succes', 'Forum édité');
+			if ($post['url'])
+			{
+				if ($url)
+				{
+					$this->db	->where('forum_id', $forum_id)
+								->update('nf_forum_url', [
+									'url' => $post['url']
+								]);
+				}
+				else
+				{
+					$this->db->insert('nf_forum_url', [
+						'forum_id' => $forum_id,
+						'url'      => $post['url']
+					]);
+				}
+			}
+			else if ($url)
+			{
+				$this->db	->where('forum_id', $forum_id)
+							->delete('nf_forum_url');
+			}
+
+			notify($this('edit_forum_success'));
 
 			redirect_back('admin/forum.html');
 		}
 
-		return new Panel(array(
-			'title'   => 'Éditer le forum',
+		return new Panel([
+			'title'   => $this('edit_forum'),
 			'icon'    => 'fa-comments',
 			'content' => $this->form->display()
-		));
+		]);
 	}
 
 	public function delete($forum_id, $title)
 	{
-		$this	->title('Suppression forum')
+		$this	->title($this('remove_forum'))
 				->subtitle($title)
-				->load->library('form')
-				->confirm_deletion('Confirmation de suppression', 'Êtes-vous sûr(e) de vouloir supprimer le forum <b>'.$title.'</b> ?<br />Tous les messages seront aussi supprimés.');
+				->form
+				->confirm_deletion($this('delete_confirmation'), $this('forum_confirmation', $title));
 
 		if ($this->form->is_valid())
 		{
@@ -132,64 +159,61 @@ class m_forum_c_admin extends Controller_Module
 	
 	public function _categories_add()
 	{
-		$this	->subtitle('Ajouter une catégorie')
-				->load->library('form')
+		$this	->subtitle($this('add_category'))
+				->form
 				->add_rules('categories')
 				->add_back('admin/forum.html')
-				->add_submit('Ajouter');
+				->add_submit($this('add'));
 
 		if ($this->form->is_valid($post))
 		{
-			$this->model()->add_category(	$post['title'],
-											in_array('on', $post['private']));
+			$this->model()->add_category($post['title']);
 
-			add_alert('Succes', 'Catégorie ajoutée avec succès');
+			notify($this('add_category_success'));
 
 			redirect_back('admin/forum.html');
 		}
 		
-		return new Panel(array(
-			'title'   => 'Ajouter une catégorie',
+		return new Panel([
+			'title'   => $this('add_category'),
 			'icon'    => 'fa-comments',
 			'content' => $this->form->display()
-		));
+		]);
 	}
 	
 	public function _categories_edit($category_id, $title)
 	{
-		$this	->subtitle('Catégorie '.$title)
-				->load->library('form')
-				->add_rules('categories', array(
-					'title'   => $title,
-					'private' => $this->db->select('entity_id')->from('nf_permissions p')->join('nf_permissions_details d', 'p.permission_id = d.permission_id')->where('addon_id', $category_id)->where('addon', 'forum')->where('action', 'category_read')->row() == $this->groups()['admins']['id']
-				))
-				->add_submit('Éditer')
+		$this	->title($this('edit_category'))
+				->subtitle($title)
+				->form
+				->add_rules('categories', [
+					'title' => $title
+				])
+				->add_submit($this('edit'))
 				->add_back('admin/forum.html');
 		
 		if ($this->form->is_valid($post))
 		{
-			$this->model()->edit_category(	$category_id,
-											$post['title'],
-											in_array('on', $post['private']));
+			$this->model()->edit_category($category_id, $post['title']);
 		
-			add_alert('Succes', 'Catégorie éditée avec succès');
+			notify($this('edit_category_success'));
 
 			redirect_back('admin/forum.html');
 		}
 		
-		return new Panel(array(
-			'title'   => 'Éditer la catégorie',
+		return new Panel([
+			'title'   => $this('edit_category'),
 			'icon'    => 'fa-comments',
 			'content' => $this->form->display()
-		));
+		]);
 	}
 	
 	public function _categories_delete($category_id, $title)
 	{
-		$this	->title('Suppression catégorie')
+		$this	->title($this('remove_category'))
 				->subtitle($title)
-				->load->library('form')
-				->confirm_deletion('Confirmation de suppression', 'Êtes-vous sûr(e) de vouloir supprimer la catégorie <b>'.$title.'</b> ?<br />Toutes les forums et messages associés à cette catégorie seront aussi supprimés.');
+				->form
+				->confirm_deletion($this('delete_confirmation'), $this('category_confirmation', $title));
 				
 		if ($this->form->is_valid())
 		{
@@ -203,6 +227,6 @@ class m_forum_c_admin extends Controller_Module
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./modules/forum/controllers/admin.php
 */

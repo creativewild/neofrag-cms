@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,37 +20,39 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class w_user_c_index extends Controller_Widget
 {
-	public function index($config = array())
+	public function index($config = [])
 	{
 		if ($this->user())
 		{
-			return new Panel(array(
-				'title'   => 'Espace membre',
-				'content' => $this->load->view('logged', array(
+			$this->css('user');
+
+			return new Panel([
+				'title'   => $this('member_area'),
+				'content' => $this->load->view('logged', [
 					'username' => $this->user('username')
-				)),
+				]),
 				'body'    => FALSE,
-				'footer'  => '<a href="{base_url}user/logout.html"><i class="fa fa-close"></i> Se déconnecter</a>'
-			));
+				'footer'  => '<a href="'.url('user/logout.html').'">'.icon('fa-close').' '.$this('logout').'</a>'
+			]);
 		}
 		else
 		{
-			return new Panel(array(
-				'title'   => 'Espace membre',
-				'content' => $this->load->view('index', array(
-					'form_id' => '6e0fbe194d97aa8c83e9f9e6b5d07c66'
-				)),
-				'footer'  => '<a href="{base_url}user.html"><i class="fa fa-sign-in"></i> Créer un compte</a>'
-			));
+			return new Panel([
+				'title'   => $this('member_area'),
+				'content' => $this->load->view('index', [
+					'form_id' => $this->form->token('6e0fbe194d97aa8c83e9f9e6b5d07c66')
+				]),
+				'footer'  => '<a href="'.url('user.html').'">'.icon('fa-sign-in  fa-rotate-90').' '.$this('create_account').'</a>'
+			]);
 		}
 	}
 	
-	public function index_mini($config = array())
+	public function index_mini($config = [])
 	{
-		return $this->load->view('index_mini');
+		return $this->load->view('index_mini', $config);
 	}
 	
-	public function messages_inbox($config = array())
+	public function messages_inbox($config = [])
 	{
 		$messages = $this->db	->select('m.message_id', 'm.title', 'IFNULL(r.content, m.content) as content', 'IFNULL(r.date, m.date) as date', 'm.user_id', 'u.username', 'up.avatar', 'up.sex')
 								->from('nf_users_messages_recipients mr')
@@ -63,19 +65,19 @@ class w_user_c_index extends Controller_Widget
 								->where('IFNULL(r.read, mr.read)', FALSE)
 								->get();
 		
-		return new Panel(array(
-			'title'   => 'Messagerie privée',
+		return new Panel([
+			'title'   => $this('private_messages'),
 			'icon'    => 'fa-envelope',
-			'content' => $this->load->view('messages_inbox', array(
+			'content' => $this->load->view('messages_inbox', [
 				'messages' => $messages
-			)),
+			]),
 			'body'    => FALSE,
-			'footer'  => '<a class="btn btn-default" href="{base_url}user/messages.html"><i class="fa fa-inbox"></i> Boîte de réception</a> <a class="btn btn-primary" href="{base_url}user/messages/compose.html"><i class="fa fa-edit"></i> Rédiger</a>'
-		));
+			'footer'  => '<a class="btn btn-default" href="'.url('user/messages.html').'">'.icon('fa-inbox').' '.$this('pm_inbox').'</a> <a class="btn btn-primary" href="'.url('user/messages/compose.html').'">'.icon('fa-edit').' '.$this('pm_compose').'</a>'
+		]);
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.2
 ./neofrag/widgets/user/controllers/index.php
 */

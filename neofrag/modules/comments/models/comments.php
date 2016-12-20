@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,7 +20,7 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class m_comments_m_comments extends Model
 {
-	private $_modules = array();
+	private $_modules = [];
 
 	public function get_comments()
 	{
@@ -31,7 +31,7 @@ class m_comments_m_comments extends Model
 												
 		if ($comments)
 		{
-			$list = array();
+			$list = [];
 
 			foreach ($comments as $comment)
 			{
@@ -45,7 +45,7 @@ class m_comments_m_comments extends Model
 		}
 		else
 		{
-			return array();
+			return [];
 		}
 	}
 
@@ -64,8 +64,8 @@ class m_comments_m_comments extends Model
 		{
 			$comment = $module->comments($module_id);
 			
-			$comment['module_title'] = $module->template->parse($module->name, array(), $module->load);
-			$comment['icon']         = $module->template->parse($module->icon, array(), $module->load);
+			$comment['module_title'] = $module->get_title();
+			$comment['icon']         = $module->template->parse($module->icon, [], $module->load);
 
 			return $comment;
 		}
@@ -73,6 +73,6 @@ class m_comments_m_comments extends Model
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/modules/comments/models/comments.php
 */

@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,20 +20,18 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class m_live_editor extends Module
 {
-	public $name          = 'LiveEditor';
+	public $title         = '{lang live_editor}';
 	public $description   = '';
+	public $icon          = 'fa-desktop';
 	public $link          = 'http://www.neofrag.com';
 	public $author        = 'Michaël Bilcot <michael.bilcot@neofrag.com>';
 	public $licence       = 'http://www.neofrag.com/license.html LGPLv3';
 	public $version       = 'Alpha 0.1';
 	public $nf_version    = 'Alpha 0.1';
-	public $administrable = FALSE;
-	public $deactivatable = FALSE;
 	public $path          = __FILE__;
-	public $routes        = array();
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.4
 ./neofrag/modules/live_editor/live_editor.php
 */

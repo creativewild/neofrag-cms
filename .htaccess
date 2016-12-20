@@ -1,14 +1,17 @@
-Options -Indexes
+Options +FollowSymLinks -Indexes
 AddDefaultCharset UTF-8
 
 <IfModule mod_rewrite.c>
 	RewriteEngine On
 
-	RewriteRule ^humans.txt$    ajax/settings/humans.txt
-	RewriteRule ^robots.txt$    ajax/settings/robots.txt
-	RewriteRule ^noscript.html$ ajax/settings/noscript.html
+	RewriteBase /
 
-	RewriteCond %{REQUEST_FILENAME} !index.php
+	RewriteCond %{REQUEST_URI} !^/backups/
+	RewriteCond %{REQUEST_FILENAME} \.(png|jpg|jpeg|gif|swf|eot|svg|ttf|woff|woff2|zip)$
+	RewriteCond %{REQUEST_FILENAME} -f
+	RewriteRule .* - [L,QSA]
 
-	RewriteRule (.*) index.php?request_url=$1 [E=REMOTE_USER:%{HTTP:Authorization},L,QSA]
+	RewriteRule ^humans.txt - [E=ROUTE:ajax/settings/humans]
+	RewriteRule ^robots.txt - [E=ROUTE:ajax/settings/robots]
+	RewriteRule .* index.php [E=REMOTE_USER:%{HTTP:Authorization},L,QSA]
 </IfModule>

@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,29 +20,19 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class w_breadcrumb_c_index extends Controller_Widget
 {
-	public function index($config = array())
+	public function index($config = [])
 	{
-		$links = array(
-			'<b>{config nf_name}</b>&nbsp;&nbsp;&nbsp;{fa-icon angle-right}&nbsp;&nbsp;&nbsp;'.($this->config->segments_url[0] == 'index' ? '{fa-icon map-marker} ' : '').'Accueil' => '{base_url}'
-		);
+		$count = count($links = $this->breadcrumb->get_links());
 		
-		if ($this->config->segments_url[0] != 'index')
-		{
-			$links[$this->assets->icon(NeoFrag::loader()->module->icon ?: 'fa-map-marker').' '.NeoFrag::loader()->module->name] = '{base_url}'.NeoFrag::loader()->module->get_name().'.html';
-		}
-		
-		$names = array_keys($links);
-		$last = end($names);
-		
-		array_walk($links, function(&$url, $name) use ($last){
-			$url = '<li'.($name == $last ? ' class="active"' : '').'><a href="'.$url.'">'.$name.'</a></li>';
+		array_walk($links, function(&$value, $key) use ($count){
+			$value = '<li'.(($is_last = $key == $count - 1) ? ' class="active"' : '').'><a href="'.url($value[1]).'">'.($is_last && $value[2] !== '' ? icon($value[2]).' ' : '').$value[0].'</a></li>';
 		});
 		
-		return '<ol class="breadcrumb">'.implode($links).'</ol>';
+		return '<ol class="breadcrumb"><li><b>'.$this->config->nf_name.'</b></li>'.implode($links).'</ol>';
 	}
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/widgets/breadcrumb/controllers/index.php
 */

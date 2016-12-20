@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -62,56 +62,58 @@ class m_pages_m_pages extends Model
 	
 	public function add_page($name, $title, $published, $subtitle, $content)
 	{
-		$page_id = $this->db->insert('nf_pages', array(
+		$page_id = $this->db->insert('nf_pages', [
 			'name'           => $name ?: url_title($title),
 			'published'      => $published
-		));
+		]);
 
-		$this->db->insert('nf_pages_lang', array(
+		$this->db->insert('nf_pages_lang', [
 			'page_id'        => $page_id,
 			'lang'           => $this->config->lang,
 			'title'          => $title,
 			'subtitle'       => $subtitle,
 			'content'        => $content
-		));
+		]);
 	}
 
 	public function edit_page($page_id, $name, $title, $published, $subtitle, $content, $lang)
 	{
-		if ($this->db	->query('	SELECT title, subtitle, content
-									FROM nf_pages p
-									JOIN nf_pages_lang l ON p.page_id = l.page_id
-									WHERE p.page_id = %d AND lang = %s', (int)$page_id, $lang)->row())
+		if ($this->db	->select('1')
+						->from('nf_pages p')
+						->join('nf_pages_lang l', 'p.page_id = l.page_id')
+						->where('p.page_id', $page_id)
+						->where('l.lang', $lang)
+						->row())
 		{
 			$this->db	->where('page_id', $page_id)
 						->where('lang', $lang)
-						->update('nf_pages_lang', array(
+						->update('nf_pages_lang', [
 							'title'    => $title,
 							'subtitle' => $subtitle,
 							'content'  => $content
-						));
+						]);
 						
 			$this->db	->where('page_id', $page_id)
-						->update('nf_pages', array(
+						->update('nf_pages', [
 							'name'           => $name ?: url_title($title),
 							'published'      => $published
-						));
+						]);
 		}
 		else
 		{
-			$this->db	->insert('nf_pages_lang', array(
+			$this->db	->insert('nf_pages_lang', [
 							'page_id'  => $page_id,
 							'lang'     => $lang,
 							'title'    => $title,
 							'subtitle' => $subtitle,
 							'content'  => $content
-						));
+						]);
 
 			$this->db	->where('page_id', $page_id)
-						->update('nf_pages', array(
+						->update('nf_pages', [
 							'name'           => $name ?: url_title($title),
 							'published'      => $published
-						));
+						]);
 		}
 	}
 	
@@ -123,6 +125,6 @@ class m_pages_m_pages extends Model
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./neofrag/modules/pages/models/pages.php
 */

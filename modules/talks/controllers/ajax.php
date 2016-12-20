@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -22,37 +22,37 @@ class m_talks_c_ajax extends Controller_Module
 {
 	public function index($talk_id, $message_id)
 	{
-		echo $this->load->view('index', array(
+		echo $this->load->view('index', [
 			'messages' => $this->model()->get_messages($talk_id, $message_id)
-		));
+		]);
 	}
 	
 	public function older($talk_id, $message_id, $position)
 	{
-		echo $this->load->view('index', array(
+		echo $this->load->view('index', [
 			'position' => $position,
 			'user_id'  => $this->db->select('user_id')->from('nf_talks_messages')->where('message_id', $message_id)->row(),
 			'messages' => $this->model()->get_messages($talk_id, $message_id, TRUE)
-		));
+		]);
 	}
 	
 	public function add_message($talk_id, $message)
 	{
 		if ($message = trim($message))
 		{
-			$this->db->insert('nf_talks_messages', array(
+			$this->db->insert('nf_talks_messages', [
 				'talk_id' => $talk_id,
 				'user_id' => $this->user('user_id'),
-				'message' => $message
-			));
+				'message' => utf8_htmlentities($message)
+			]);
 		}
 	}
 	
 	public function delete($message_id, $talk_id)
 	{
-		$this	->title('Confirmation de suppression')
-				->load->library('form')
-				->confirm_deletion('Confirmation de suppression', 'Êtes-vous sûr(e) de vouloir supprimer ce message ?');
+		$this	->title($this('delete_confirmation'))
+				->form
+				->confirm_deletion($this('delete_confirmation'), $this('delete_message_ajax'));
 
 		if ($this->form->is_valid())
 		{
@@ -64,9 +64,9 @@ class m_talks_c_ajax extends Controller_Module
 			else
 			{
 				$this->db	->where('message_id', $message_id)
-							->update('nf_talks_messages', array(
+							->update('nf_talks_messages', [
 								'message' => NULL
-							));
+							]);
 			}
 
 			return 'OK';
@@ -77,6 +77,6 @@ class m_talks_c_ajax extends Controller_Module
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5
 ./modules/talks/controllers/ajax.php
 */

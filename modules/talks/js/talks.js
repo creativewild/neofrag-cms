@@ -11,18 +11,18 @@ $(function(){
 		var $first = $talks.find('[data-message-id]:last');
 		var data = {
 			talk_id:    $talks.data('talk-id'),
-			message_id: $first.data('message-id')
+			message_id: $first.length ? $first.data('message-id') : 0
 		};
 
 		if (olders){
 			$.extend(data, {
-				position: $first.data('position')
+				position: $first.length ? $first.data('position') : 0
 			});
 		}
 		
 		$talks.data('onupdate', true);
 		
-		$.post('{base_url}ajax/talks'+(olders ? '/older' : '')+'.html', data, function(data){
+		$.post('<?php echo url('ajax/talks'); ?>'+(olders ? '/older' : '')+'.html', data, function(data){
 			if (olders){
 				$talks.append(data);
 			}
@@ -60,7 +60,7 @@ $(function(){
 		var $talks = $(this).parents('.widget.widget-talks:first').find('[data-talk-id]:first');
 		
 		if ($input.val()){
-			$.post('{base_url}ajax/talks/add_message.html', {
+			$.post('<?php echo url('ajax/talks/add_message.html'); ?>', {
 				talk_id: $talks.data('talk-id'),
 				message: $input.val()
 			}, function(data){

@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 NeoFrag is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -20,65 +20,28 @@ along with NeoFrag. If not, see <http://www.gnu.org/licenses/>.
 
 class Tab extends Library
 {
-	private $_tabs         = array();
-	private $_url_position = 'end';
-	private $_default_tab  = 'default';
+	private $_tabs         = [];
+	private $_default_tab  = '';
 
-	public function add_tab($url, $name, $function, $args = array())
+	public function add_tab($url, $name, $callback)
 	{
-		$this->_tabs[] = array(
+		$this->_tabs[] = [
 			'url'      => $url,
 			'name'     => $name,
-			'function' => $function,
-			'args'     => $args ? array_offset_left(func_get_args(), 3) : $args
-		);
+			'callback' => $callback,
+		];
 
-		return $this;
-	}
-	
-	public function add_tabs($tabs)
-	 {
-		$this->_tabs = array_merge($this->_tabs, $tabs);
-		return $this;
-	 }
-	 
-	public function add_translation_tabs($function)
-	{
-		$this->_tabs[] = array(
-			'name'     => 'translations',
-			'function' => $function,
-			'args'     => array_offset_left(func_get_args())
-		);
-
-		return $this;
-	}
-
-	public function url_position($position)
-	{
-		if (in_array($position, array('beginning', 'end')))
-		{
-			$this->_url_position = $position;
-		}
-
-		return $this;
-	}
-
-	public function default_tab($default)
-	{
-		$this->_default_tab = url_title($default);
 		return $this;
 	}
 
 	public function display($index)
 	{
 		$index = url_title($index);
-		$module_name = $this->config->segments_url[0];
-		$base_url = implode('/', in_array($index, $segments = array_offset_left($this->config->segments_url)) ? ($this->_url_position == 'end' ? array_offset_right($segments) : array_offset_left($segments)) : $segments);
 
-		$tabs = array(
-			'panes'    => array(),
-			'sections' => array()
-		);
+		$tabs = [
+			'panes'    => [],
+			'sections' => []
+		];
 
 		$i = 0;
 		foreach ($this->_tabs as $tab)
@@ -87,19 +50,18 @@ class Tab extends Library
 			{
 				$tab['url'] = url_title($tab['url']);
 
-				$tabs['sections'][] = array(
+				$tabs['sections'][] = [
 					'active' => $tab['url'] == $index,
 					'url'    => ($tab['url'] == $this->_default_tab) ? '' : $tab['url'],
 					'name'   => $tab['name']
-				);
+				];
 
 				if ($tab['url'] == $index)
 				{
-					$tabs['panes'][] = array(
-						'args'     => $tab['args'],
+					$tabs['panes'][] = [
 						'id'       => $tab['url'],
-						'function' => $tab['function']
-					);
+						'callback' => $tab['callback']
+					];
 				}
 
 				$i++;
@@ -108,7 +70,7 @@ class Tab extends Library
 			{
 				$languages = $this->db	->select('code', 'name', 'flag')
 										->from('nf_settings_languages')
-										->order_by('`order`')
+										->order_by('order')
 										->get();
 
 				foreach ($languages as $lang)
@@ -127,19 +89,18 @@ class Tab extends Library
 						}
 					}
 
-					$tabs['sections'][] = array(
+					$tabs['sections'][] = [
 						'active' => $lang['code'] == $code,
 						'url'    => ($i == 0) ? '' : $lang['code'],
-						'name'   => '<img src="{image flags/'.$lang['flag'].'}" alt="" />'.$lang['name']
-					);
+						'name'   => '<img src="'.image('flags/'.$lang['flag']).'" alt="" />'.$lang['name']
+					];
 
 					if ($lang['code'] == $index)
 					{
-						$tabs['panes'][] = array(
-							'args'     => array_merge($tab['args'], array($index)),
+						$tabs['panes'][] = [
 							'id'       => $lang['code'],
-							'function' => $tab['function']
-						);
+							'callback' => $tab['callback']
+						];
 					}
 
 					$i++;
@@ -160,24 +121,24 @@ class Tab extends Library
 			throw new Exception(NeoFrag::UNFOUND);
 		}
 
+		$segments = explode('/', $this->pagination->get_url());
+		$base_url = implode('/', end($segments) == $index ? array_offset_right($segments) : $segments);
+
 		$output = '	<div class="tabbable">
-						{tab_header}
 						<ul class="nav nav-tabs">';
 
 		foreach ($tabs['sections'] as $section)
 		{
-			$output .= '	<li'.(($section['active']) ? ' class="active"' : '').'><a href="{base_url}'.$module_name.'/'.trim(($this->_url_position == 'end') ? $base_url.'/'.$section['url'] : $section['url'].'/'.$base_url, '/').'.html">'.$section['name'].'</a></li>';
+			$output .= '	<li'.(($section['active']) ? ' class="active"' : '').'><a href="'.rtrim($base_url.'/'.$section['url'], '/').'.html">'.$section['name'].'</a></li>';
 		}
 
 		$output .= '	</ul>
 						<div class="tab-content">';
 
-		$caller = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2)[1]['object'];
-
 		foreach ($tabs['panes'] as $pane)
 		{
 			$output .= '	<div class="tab-pane active" id="'.$pane['id'].'">
-								'.(string)$caller->method($pane['function'], $pane['args']).'
+								'.$pane['callback']().'
 							</div>';
 		}
 
@@ -189,6 +150,6 @@ class Tab extends Library
 }
 
 /*
-NeoFrag Alpha 0.1
+NeoFrag Alpha 0.1.5.3
 ./neofrag/libraries/tab.php
 */

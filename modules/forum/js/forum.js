@@ -7,7 +7,7 @@ $(function(){
 		opacity: 0.6,
 		revert: true,
 		update: function(event, ui){
-			$.post('{base_url}admin/ajax/forum/categories/move.html', {
+			$.post('<?php echo url('admin/ajax/forum/categories/move.html'); ?>', {
 				category_id: $(ui.item).find('[data-category-id]:first').data('category-id'),
 				position: $(this).find('.panel').index(ui.item)
 			});
@@ -24,12 +24,32 @@ $(function(){
 		revert: true,
 		update: function(event, ui){
 			if (this === ui.item.parent()[0]){
-				$.post('{base_url}admin/ajax/forum/move.html', {
-					category_id: $(ui.item).parents('[data-category-id]:first').data('category-id'),
+				$.post('<?php echo url('admin/ajax/forum/move.html'); ?>', {
+					parent_id: $(ui.item).parents('[data-category-id]:first').data('category-id'),
 					forum_id: $(ui.item).data('forum-id'),
 					position: $(this).find('tr').index(ui.item)
 				});
 			}
+		}
+	});
+	
+	$('.subforums').sortable({
+		axis: 'y',
+		connectWith: '.subforums',
+		cursor: 'move',
+		intersect: 'pointer',
+		items: '> li',
+		opacity: 0.6,
+		revert: true,
+		update: function(event, ui){
+			if (this === ui.item.parent()[0]){
+				$.post('<?php echo url('admin/ajax/forum/move.html'); ?>', {
+					parent_id: $(ui.item).parents('[data-forum-id]:first').data('forum-id'),
+					forum_id: $(ui.item).data('forum-id'),
+					position: $(this).find('li').index(ui.item)
+				});
+			}
+
 		}
 	});
 });
